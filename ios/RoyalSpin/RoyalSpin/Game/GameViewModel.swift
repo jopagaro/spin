@@ -22,6 +22,11 @@ final class GameViewModel: ObservableObject {
     @Published private(set) var displayCredits: Int
     @Published private(set) var freeSpinsRemaining = 0
     @Published private(set) var message: String?
+    /// Which cabinet is being played. Set from the lobby.
+    @Published private(set) var mode: ReelMode = .three
+    /// Guaranteed-win spins the player has banked, mirrored from the engine.
+    @Published private(set) var bonusSpins: Int = 0
+
     @Published var volatility: Volatility { didSet { machine.volatility = volatility; save() } }
     @Published var isMuted = false { didSet { AudioEngine.shared.isMuted = isMuted; save() } }
     @Published var teaseEnabled = true {
@@ -41,9 +46,31 @@ final class GameViewModel: ObservableObject {
     static let startingCredits = 5_000
     static let betLevels = [1, 2, 5, 10, 25, 50, 100]
 
-    var totalBet: Int { betPerLine * Paylines.count }
-    var canSpin: Bool { !isSpinning && (freeSpinsRemaining > 0 || credits >= totalBet) }
-    var isFreeSpin: Bool { freeSpinsRemaining > 0 }
+    /// Guaranteed-win spins handed to a brand-new player, so the very first thing
+    /// they do lands rather than whiffs. Onboarding only — these are not granted on
+    /// purchase, so buying credits never changes the odds of a staked spin.
+    static let welcomeBonusSpins = 3
+
+    /// Bonus spins awarded when the reels hit the bonus.
+    static let bonusSpinsPerTrigger = 3
+
+    var totalBet: Int { betPerLine * mode.lineCount }
+    var canSpin: Bool {
+        !isSpinning && (bonusSpins > 0 || freeSpinsRemaining > 0 || credits >= totalBet)
+    }
+        var isFreeSpin: Bool { freeSpinsRemaining > 0 }
+
+    /// What the big button should say.
+    var spinButtonLabel: String {
+        if bonusSpins > 0 { return "BONUS" }
+        if freeSpinsRemaining > 0 { return "FREE" }
+        return "SPIN"
+    }
+
+    func canAdjustBet(up: Bool) -> Bool {
+        guard let i = Self.betLevels.firstIndex(of: betPerLine) else { return true }
+        return up ? i < Self.betLevels.count - 1 : i > 0
+    }
 
     // MARK: Internals
 
@@ -52,6 +79,9 @@ final class GameViewModel: ObservableObject {
     private var bannerTask: Task<Void, Never>?
 
     private enum Key {
+        static let mode = "rs.mode"
+        static let bonusSpins = "rs.bonusSpins"
+        static let welcomeGranted = "rs.welcomeGranted"
         static let credits = "rs.credits"
         static let bet = "rs.betPerLine"
         static let seed = "rs.seed"
@@ -81,9 +111,12 @@ final class GameViewModel: ObservableObject {
         let vol = Volatility(rawValue: d.string(forKey: Key.volatility) ?? "") ?? .brutal
         let tease = d.object(forKey: Key.tease) as? Bool ?? true
 
+        let savedMode = ReelMode(rawValue: d.string(forKey: Key.mode) ?? "") ?? .three
         self.machine = SlotMachine(seed: seed,
+                                   mode: savedMode,
                                    volatility: vol,
                                    nearMiss: tease ? .default : .off)
+        self.mode = savedMode
         self.volatility = vol
         self.teaseEnabled = tease
 
@@ -99,7 +132,43 @@ final class GameViewModel: ObservableObject {
             machine.advance(to: count.uint64Value)
         }
 
+        // Restore banked bonus spins, and grant the welcome batch exactly once.
+        //
+        // The grant is gated on its own flag rather than on "are there zero bonus
+        // spins?", because those two states are not the same thing: a player who has
+        // simply spent their welcome spins also has zero, and inferring from the
+        // count would hand them a fresh batch on every launch.
+        var banked = d.object(forKey: Key.bonusSpins) as? Int ?? 0
+        if !d.bool(forKey: Key.welcomeGranted) {
+            banked += Self.welcomeBonusSpins
+            d.set(true, forKey: Key.welcomeGranted)
+        }
+        machine.awardBonusSpins(banked)
+        self.bonusSpins = machine.bonusSpinsRemaining
+
         AudioEngine.shared.isMuted = isMuted
+    }
+
+    // MARK: Machine selection
+
+    /// Switch cabinets from the lobby.
+    ///
+    /// Safe mid-session: the mode changes which paylines and paytable score a result,
+    /// and how many reels are drawn, but never the reel strips or the RNG stream — so
+    /// symbol weightings stay identical and no sequence is replayed.
+    func selectMachine(mode newMode: ReelMode, volatility newVolatility: Volatility) {
+        machine.mode = newMode
+        machine.volatility = newVolatility
+        mode = newMode
+        volatility = newVolatility
+        // A bet that was legal on 20 lines can be unaffordable on 9, and vice versa.
+        if totalBet > credits, let affordable = Self.betLevels.last(where: { $0 * newMode.lineCount <= credits }) {
+            betPerLine = affordable
+        }
+        lastResult = nil
+        message = nil
+        nearMissBanner = nil
+        save()
     }
 
     // MARK: Betting
@@ -119,7 +188,7 @@ final class GameViewModel: ObservableObject {
         guard !isSpinning else { return }
         // Highest level we can actually afford, so the button never traps the player
         // in a bet they can't cover.
-        let affordable = Self.betLevels.last { $0 * Paylines.count <= credits }
+        let affordable = Self.betLevels.last { $0 * mode.lineCount <= credits }
         betPerLine = affordable ?? Self.betLevels[0]
         AudioEngine.shared.play(.uiTap, volume: 0.5)
         save()
@@ -144,8 +213,11 @@ final class GameViewModel: ObservableObject {
         message = nil
         isSpinning = true
 
-        if freeSpinsRemaining > 0 {
-            freeSpinsRemaining -= 1
+        // Bonus spins are a gift and cost nothing; ordinary free spins likewise.
+        // Only a staked spin touches the balance, which is what keeps the published
+        // RTP an honest description of what the player is paying for.
+        if bonusSpins > 0 || freeSpinsRemaining > 0 {
+            if bonusSpins == 0 { freeSpinsRemaining -= 1 }
         } else {
             credits -= totalBet
             displayCredits = credits
@@ -153,6 +225,7 @@ final class GameViewModel: ObservableObject {
 
         let result = machine.spin(betPerLine: betPerLine)
         lastResult = result
+        bonusSpins = machine.bonusSpinsRemaining
 
         AudioEngine.shared.play(.leverPull)
         AudioEngine.shared.startLoop()
@@ -172,23 +245,31 @@ final class GameViewModel: ObservableObject {
             AudioEngine.shared.playWin(tier: result.tier)
             countUp(to: credits, tier: result.tier)
 
-            if result.freeSpinsAwarded > 0 {
-                freeSpinsRemaining += result.freeSpinsAwarded
-                message = "\(result.freeSpinsAwarded) FREE SPINS!"
-                AudioEngine.shared.play(.freeSpins)
-            }
+            awardBonusIfTriggered(result)
         } else {
             displayCredits = credits
-            if result.freeSpinsAwarded > 0 {
-                freeSpinsRemaining += result.freeSpinsAwarded
-                message = "\(result.freeSpinsAwarded) FREE SPINS!"
-                AudioEngine.shared.play(.freeSpins)
-            } else if let nm = result.nearMiss {
+            if !awardBonusIfTriggered(result), let nm = result.nearMiss {
                 showNearMiss(nm)
             }
         }
 
         save()
+    }
+
+    /// Landing the bonus awards free spins *and* a handful of guaranteed-win spins.
+    ///
+    /// The guaranteed wins are earned on the reels rather than handed out with a
+    /// purchase. That keeps the reward inside the game and keeps the store a plain
+    /// exchange of money for credits, with no hidden change to the odds attached.
+    @discardableResult
+    private func awardBonusIfTriggered(_ result: SpinResult) -> Bool {
+        guard result.freeSpinsAwarded > 0 else { return false }
+        freeSpinsRemaining += result.freeSpinsAwarded
+        machine.awardBonusSpins(Self.bonusSpinsPerTrigger)
+        bonusSpins = machine.bonusSpinsRemaining
+        message = "\(result.freeSpinsAwarded) FREE SPINS + \(Self.bonusSpinsPerTrigger) GUARANTEED!"
+        AudioEngine.shared.play(.freeSpins)
+        return true
     }
 
     /// Reel `index` just landed — used for the per-reel knock and the scatter chime.
@@ -266,5 +347,7 @@ final class GameViewModel: ObservableObject {
         d.set(isMuted, forKey: Key.muted)
         d.set(teaseEnabled, forKey: Key.tease)
         d.set(freeSpinsRemaining, forKey: Key.freeSpins)
+        d.set(mode.rawValue, forKey: Key.mode)
+        d.set(bonusSpins, forKey: Key.bonusSpins)
     }
 }

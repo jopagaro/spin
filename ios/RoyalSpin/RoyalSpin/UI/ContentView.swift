@@ -2,92 +2,103 @@
 //  ContentView.swift
 //  RoyalSpin
 //
-//  Layout notes — why this is built from pieces rather than one image.
+//  The whole cabinet, drawn as one piece of artwork, with the live 3D reels showing
+//  through its chroma-keyed window and the controls seated in its own inset frames.
 //
-//  The source artwork (assets/marketing/royal_spin_cover_cabinet.png) is a *poster*:
-//  a portrait rendering of a whole machine, with a tall crown, lions and thick
-//  decorative side columns. Rendering it as a single image is what made the game
-//  tiny. The arithmetic is unforgiving:
+//  An earlier revision cut the poster into three full-width bands (marquee / reels /
+//  control bar) to make the symbols bigger. It worked arithmetically — symbols went
+//  from 55pt to 76pt — but it read as three separate objects rather than a machine,
+//  so it's been reverted. The size is instead recovered by the three-reel cabinet,
+//  where the same window is divided by three rather than five.
 //
-//    · the reel window is 68.55% of the poster's width and 37% of its height,
-//      so the playfield is only ~25% of the artwork's area;
-//    · the poster is 2:3 while a phone is nearer 1:2, so fitting it by width
-//      leaves it covering ~69% of the screen height.
-//
-//  Multiply those and the reels land on **17.5% of the screen**. No amount of
-//  scaling fixes that, because the side columns consume width the grid needs.
-//
-//  So the poster is cut into three full-width bands instead — marquee, reels,
-//  control bar — each stretched to the screen's full width. The columns simply stop
-//  being drawn, the grid becomes the hero, and symbols go from 55pt to ~76pt with
-//  nothing cropped and the lions fully intact.
+//  Only the credits readout and the store button live outside the cabinet, at the
+//  top of the screen, where a six-digit number has room to grow.
 //
 
 import SceneKit
 import SwiftUI
 
-// MARK: - Artwork geometry
+// MARK: - Cabinet geometry
 
-/// Normalised positions measured off the source artwork. Replace a piece of art and
-/// update the constants here; nothing else in the file moves.
-private enum Art {
+/// Normalised (0…1) positions measured off `cabinet_frame.png`, which is 1024 × 1536.
+/// Replace the artwork and update these; nothing else in the file moves.
+private enum Cab {
+    static let imageW = 1024.0
+    static let imageH = 1536.0
+    static var aspect: Double { imageW / imageH }
 
-    /// `marquee.png` — crown, lions and nameplate. Cropped from the poster's top 408
-    /// rows of 1024×1536, which stops just above the reel window's gem rail; cutting
-    /// any lower leaves a row of half-gems that reads as a mistake.
-    enum Marquee {
-        static let w = 1024.0, h = 408.0
-        static var aspect: Double { w / h }
-    }
-
-    /// `control_bar.png` — the quilted control panel with its four inset frames.
-    /// Cropped from rows 1090…1400 of the poster.
-    enum Bar {
-        static let w = 1024.0, h = 310.0
-        static var aspect: Double { w / h }
-
-        /// Slot centres and interior sizes, normalised to this crop. The x values are
-        /// unchanged from the poster; the y values are re-based by the 1090px offset.
-        struct Slot { let cx, cy, sw, sh: Double }
-
-        static let betDown = Slot(cx: 189 / w, cy: (1197 - 1090) / h, sw: 118 / w, sh: 132 / h)
-        static let readout = Slot(cx: 379 / w, cy: (1199 - 1090) / h, sw: 120 / w, sh: 76 / h)
-        static let betUp   = Slot(cx: 556 / w, cy: (1197 - 1090) / h, sw: 118 / w, sh: 132 / h)
-        static let spin    = Slot(cx: 815 / w, cy: (1200 - 1090) / h, sw: 152 / w, sh: 152 / h)
-    }
-
-    /// Exact border colour of the artwork — used for the app background so the
-    /// pieces have no visible seam against the screen.
+    /// Exact border colour of the artwork, so the cabinet has no seam on screen.
     static let backdrop = Color(red: 0x00 / 255.0, green: 0x00 / 255.0, blue: 0x1D / 255.0)
     /// Inside the machine, behind the reels.
     static let reelVoid = Color(red: 0x15 / 255.0, green: 0x0A / 255.0, blue: 0x2E / 255.0)
 
-    /// Rows of symbols the reel viewport shows: three full plus a sliver above and
-    /// below. See the derivation in `ReelScene` — panels foreshorten toward the edge
-    /// of the cylinder, so this is not simply 3 + 2×sliver.
-    static let visibleRows = 3.25
+    /// The chroma-keyed reel window: x 159–860, y 465–1033.
+    enum Window {
+        static let x0 = 159.0 / imageW, x1 = 860.0 / imageW
+        static let y0 = 465.0 / imageH, y1 = 1033.0 / imageH
+        static var midX: Double { (x0 + x1) / 2 }
+        static var midY: Double { (y0 + y1) / 2 }
+        static var w: Double { x1 - x0 }
+        static var h: Double { y1 - y0 }
 
-    /// Side inset for the reel block, in points.
-    static let reelInset: CGFloat = 10
-    /// Thickness of the gold bezel drawn around the reels.
-    static let bezel: CGFloat = 8
-    /// Dark housing between the bezel and the reels. This is what gives the grid the
-    /// presence of a machine body rather than a bare rectangle, and it usefully
-    /// absorbs vertical slack that would otherwise read as dead space.
-    static let housing: CGFloat = 22
+        /// Rows the viewport shows: three full plus a sliver above and below.
+        ///
+        /// The camera frames a fixed number of symbols, so the vertical extent it
+        /// shows follows from the viewport's aspect ratio. Panels foreshorten as they
+        /// curve away, which is why this isn't simply 3 + 2×sliver — asking for a 20%
+        /// sliver naively produced a 30% one.
+        static let visibleRows = 3.25
+    }
 
-    /// Draw the control bar wider than the screen and clip the overhang. It is a
-    /// horizontal strip, so its far left and right are plain wooden moulding — losing
-    /// a little makes the bar taller and gives the controls more presence, which is a
-    /// much better trade than it was for the full cabinet.
-    static let barOverscale: CGFloat = 1.26
+    /// A control slot: centre plus usable interior size, both normalised.
+    struct Slot { let cx, cy, w, h: Double }
+
+    static let betDown = Slot(cx: 189 / imageW, cy: 1197 / imageH, w: 118 / imageW, h: 132 / imageH)
+    static let readout = Slot(cx: 379 / imageW, cy: 1199 / imageH, w: 120 / imageW, h: 76 / imageH)
+    static let betUp   = Slot(cx: 556 / imageW, cy: 1197 / imageH, w: 118 / imageW, h: 132 / imageH)
+    /// The well's purple interior is 186px across; the button is sized under that so
+    /// the artwork's gold ring stays visible all the way round rather than being
+    /// overlapped into a crescent.
+    static let spin    = Slot(cx: 815 / imageW, cy: 1200 / imageH, w: 152 / imageW, h: 152 / imageH)
 }
 
-// MARK: - View
+// MARK: - Root
 
+/// Owns the session and swaps between the lobby and a machine.
 struct ContentView: View {
 
     @StateObject private var game = GameViewModel()
+    @State private var playing = false
+    @State private var showStore = false
+
+    var body: some View {
+        Group {
+            if playing {
+                MachineView(game: game) { playing = false }
+            } else {
+                LobbyView(
+                    credits: game.displayCredits,
+                    bonusSpins: game.bonusSpins,
+                    onPick: { mode, volatility in
+                        game.selectMachine(mode: mode, volatility: volatility)
+                        playing = true
+                    },
+                    onBuy: { showStore = true }
+                )
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: playing)
+        .sheet(isPresented: $showStore) { StoreSheet(onReset: game.resetCredits) }
+    }
+}
+
+// MARK: - Machine
+
+struct MachineView: View {
+
+    @ObservedObject var game: GameViewModel
+    var onExit: () -> Void
+
     @State private var scene = ReelScene()
     @State private var showSettings = false
     @State private var showPaytable = false
@@ -96,33 +107,28 @@ struct ContentView: View {
     @State private var spinPressed = false
 
     var body: some View {
-        GeometryReader { geo in
-            let inner = geo.size.width - Art.reelInset * 2 - (Art.bezel + Art.housing) * 2
-            let symbol = inner / CGFloat(Paylines.reels)
+        ZStack {
+            background
 
-            ZStack {
-                background
-
-                VStack(spacing: 0) {
-                    hud
-                    marquee
-                    Spacer(minLength: 0)
-                    reels(symbol: symbol)
-                    Spacer(minLength: 0)
-                    controlBar(width: geo.size.width)
-                }
-                // The control bar is the machine's base; it should meet the bottom of
-                // the screen rather than float above the home indicator.
-                .ignoresSafeArea(edges: .bottom)
-
-                overlays
+            VStack(spacing: 0) {
+                topBar
+                cabinet
             }
+            .ignoresSafeArea(edges: .bottom)
+
+            overlays
         }
         .preferredColorScheme(.dark)
-        .onAppear(perform: wireScene)
+        .onAppear {
+            wireScene()
+            scene.rebuild(for: game.mode)
+        }
+        .onChange(of: game.mode) { _, newMode in scene.rebuild(for: newMode) }
         .sheet(isPresented: $showSettings) { SettingsSheet(game: game) }
-        .sheet(isPresented: $showPaytable) { PaytableSheet(volatility: game.volatility) }
-        .sheet(isPresented: $showStore) { StoreSheet() }
+        .sheet(isPresented: $showPaytable) {
+            PaytableSheet(volatility: game.volatility, mode: game.mode)
+        }
+        .sheet(isPresented: $showStore) { StoreSheet(onReset: game.resetCredits) }
     }
 
     // MARK: Wiring
@@ -147,19 +153,30 @@ struct ContentView: View {
         scene.spin(to: result)
     }
 
-    // MARK: Bands
+    // MARK: Top bar
 
-    /// Credits, store and menu. Sits above the marquee so the number has room to
-    /// grow to six digits without fighting the artwork.
-    private var hud: some View {
+    /// Credits and the store. Everything else lives on the cabinet itself.
+    private var topBar: some View {
         HStack(spacing: 8) {
+            Button(action: onExit) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(goldGradient)
+                    .frame(width: 34, height: 34)
+                    .background(Circle().fill(.black.opacity(0.45)))
+                    .overlay(Circle().strokeBorder(goldGradient.opacity(0.6), lineWidth: 1.5))
+            }
+            .buttonStyle(.plain)
+            .disabled(game.isSpinning)
+            .opacity(game.isSpinning ? 0.35 : 1)
+
             VStack(alignment: .leading, spacing: -3) {
                 Text("CREDITS")
                     .font(.system(size: 9, weight: .black, design: .rounded))
                     .foregroundStyle(.white.opacity(0.45))
                     .tracking(2.0)
                 Text(game.displayCredits.formatted())
-                    .font(.system(size: 27, weight: .black, design: .serif))
+                    .font(.system(size: 26, weight: .black, design: .serif))
                     .foregroundStyle(goldGradient)
                     .monospacedDigit()
                     .contentTransition(.numericText())
@@ -168,160 +185,156 @@ struct ContentView: View {
                     .shadow(color: .black.opacity(0.8), radius: 3, y: 2)
             }
 
-            // Buying credits is the planned business model, so the affordance is
-            // reserved here now rather than retrofitted into a finished layout.
             Button { showStore = true } label: {
                 HStack(spacing: 3) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 10, weight: .black))
-                    Text("BUY")
-                        .font(.system(size: 11, weight: .black, design: .rounded))
+                    Image(systemName: "plus").font(.system(size: 10, weight: .black))
+                    Text("BUY").font(.system(size: 11, weight: .black, design: .rounded))
                 }
                 .foregroundStyle(Color(red: 0.24, green: 0.10, blue: 0))
-                .padding(.horizontal, 11).padding(.vertical, 7)
+                .padding(.horizontal, 10).padding(.vertical, 7)
                 .background(Capsule().fill(goldGradient))
             }
             .buttonStyle(.plain)
 
             Spacer(minLength: 2)
 
-            if game.freeSpinsRemaining > 0 {
-                VStack(spacing: -2) {
-                    Text("\(game.freeSpinsRemaining)")
-                        .font(.system(size: 16, weight: .black, design: .serif))
-                        .foregroundStyle(.black)
-                    Text("FREE")
-                        .font(.system(size: 7, weight: .black, design: .rounded))
-                        .foregroundStyle(.black.opacity(0.7))
-                }
-                .frame(width: 36, height: 36)
-                .background(Circle().fill(goldGradient))
-                .transition(.scale.combined(with: .opacity))
+            if game.bonusSpins > 0 {
+                badge(count: game.bonusSpins, label: "BONUS")
+            } else if game.freeSpinsRemaining > 0 {
+                badge(count: game.freeSpinsRemaining, label: "FREE")
             }
 
             chromeButton("rectangle.grid.3x2.fill") { showPaytable = true }
             chromeButton("gearshape.fill") { showSettings = true }
         }
-        .padding(.horizontal, 14)
-        .padding(.bottom, 4)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 2)
+        .animation(.spring(response: 0.35, dampingFraction: 0.7), value: game.bonusSpins)
         .animation(.spring(response: 0.35, dampingFraction: 0.7), value: game.freeSpinsRemaining)
     }
 
-    /// Crown, lions and nameplate, full width.
-    @ViewBuilder
-    private var marquee: some View {
-        if let art = UIImage(named: "marquee") {
-            Image(uiImage: art)
-                .resizable()
-                .aspectRatio(Art.Marquee.aspect, contentMode: .fit)
-                .frame(maxWidth: .infinity)
-        } else {
-            Text("ROYAL SPIN")
-                .font(.system(size: 34, weight: .black, design: .serif))
-                .foregroundStyle(goldGradient)
-                .padding(.vertical, 18)
+    private func badge(count: Int, label: String) -> some View {
+        VStack(spacing: -2) {
+            Text("\(count)")
+                .font(.system(size: 15, weight: .black, design: .serif))
+                .foregroundStyle(.black)
+            Text(label)
+                .font(.system(size: 7, weight: .black, design: .rounded))
+                .foregroundStyle(.black.opacity(0.7))
         }
+        .frame(width: 34, height: 34)
+        .background(Circle().fill(goldGradient))
+        .transition(.scale.combined(with: .opacity))
     }
 
-    /// The playfield. Full width, which is the whole point of this layout.
-    private func reels(symbol: CGFloat) -> some View {
-        let viewportW = symbol * CGFloat(Paylines.reels)
-        let viewportH = symbol * CGFloat(Art.visibleRows)
+    // MARK: Cabinet
 
-        return ZStack {
-            SceneView(
-                scene: scene.scene,
-                options: [.rendersContinuously],
-                preferredFramesPerSecond: 60,
-                antialiasingMode: .multisampling2X,
-                delegate: scene
-            )
-            .frame(width: viewportW, height: viewportH)
-            .background(Art.reelVoid)
+    private var cabinet: some View {
+        GeometryReader { geo in
+            let fit = cabinetSize(in: geo.size)
+            let ox = (geo.size.width - fit.width) / 2
+            let oy = (geo.size.height - fit.height) / 2
+
+            ZStack {
+                // Dark interior filling the whole window. The 3D viewport is shorter
+                // than this, so these bands show above and below the reels.
+                Rectangle()
+                    .fill(Cab.reelVoid)
+                    .frame(width: fit.width * Cab.Window.w, height: fit.height * Cab.Window.h)
+                    .position(x: ox + fit.width * Cab.Window.midX,
+                              y: oy + fit.height * Cab.Window.midY)
+
+                SceneView(
+                    scene: scene.scene,
+                    options: [.rendersContinuously],
+                    preferredFramesPerSecond: 60,
+                    antialiasingMode: .multisampling2X,
+                    delegate: scene
+                )
+                .frame(width: fit.width * Cab.Window.w,
+                       height: viewportHeight(fit: fit))
+                .position(x: ox + fit.width * Cab.Window.midX,
+                          y: oy + fit.height * Cab.Window.midY)
+
+                if let art = UIImage(named: "cabinet_frame") {
+                    // Framed to exactly the rect the slot overlays are computed
+                    // against. Letting this default to `scaledToFit` inside the
+                    // container draws it at a different scale and every control
+                    // drifts off its frame.
+                    Image(uiImage: art)
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: fit.width, height: fit.height)
+                        .position(x: ox + fit.width / 2, y: oy + fit.height / 2)
+                        .allowsHitTesting(false)
+                }
+
+                seat(Cab.betDown, fit, ox, oy) {
+                    betGlyph(minus: true,
+                             enabled: !game.isSpinning && game.canAdjustBet(up: false)) {
+                        game.adjustBet(by: -1)
+                    }
+                }
+
+                seat(Cab.readout, fit, ox, oy) {
+                    VStack(spacing: -1) {
+                        Text("BET")
+                            .font(.system(size: 9, weight: .black, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.6))
+                            .tracking(1.5)
+                        Text(game.totalBet.formatted())
+                            .font(.system(size: 25, weight: .heavy, design: .serif))
+                            .foregroundStyle(goldGradient)
+                            .monospacedDigit()
+                            .minimumScaleFactor(0.4)
+                            .lineLimit(1)
+                            .contentTransition(.numericText())
+                    }
+                    .shadow(color: .black.opacity(0.8), radius: 2, y: 1)
+                }
+
+                seat(Cab.betUp, fit, ox, oy) {
+                    betGlyph(minus: false,
+                             enabled: !game.isSpinning && game.canAdjustBet(up: true)) {
+                        game.adjustBet(by: 1)
+                    }
+                }
+
+                seat(Cab.spin, fit, ox, oy) { spinButton }
+            }
         }
-        .padding(Art.housing)
-        .background(
-            // Machine body: a slightly warmer dark than the reel void so the housing
-            // reads as a surface the grid is inset into.
-            RoundedRectangle(cornerRadius: 14)
-                .fill(LinearGradient(
-                    colors: [Color(red: 0.17, green: 0.08, blue: 0.28),
-                             Color(red: 0.10, green: 0.05, blue: 0.19)],
-                    startPoint: .top, endPoint: .bottom))
-        )
-        .overlay(
-            // Gold bezel, lit from the top-left to match the artwork.
-            RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(
-                    LinearGradient(colors: [Color(red: 1.0, green: 0.94, blue: 0.66),
-                                            Color(red: 0.86, green: 0.63, blue: 0.18),
-                                            Color(red: 0.55, green: 0.34, blue: 0.06)],
-                                   startPoint: .topLeading, endPoint: .bottomTrailing),
-                    lineWidth: Art.bezel)
-        )
-        .shadow(color: .black.opacity(0.75), radius: 18, y: 8)
+        .clipped()
     }
 
-    /// The four controls, seated in the artwork's own inset frames.
-    private func controlBar(width: CGFloat) -> some View {
-        let h = width / Art.Bar.aspect
-
-        return ZStack {
-            if let art = UIImage(named: "control_bar") {
-                Image(uiImage: art)
-                    .resizable()
-                    .frame(width: width, height: h)
-                    .allowsHitTesting(false)
-            }
-
-            seat(Art.Bar.betDown, width, h) {
-                betGlyph(minus: true, enabled: !game.isSpinning && canAdjustBet(up: false)) {
-                    game.adjustBet(by: -1)
-                }
-            }
-
-            seat(Art.Bar.readout, width, h) {
-                VStack(spacing: -1) {
-                    Text("BET")
-                        .font(.system(size: 9, weight: .black, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.6))
-                        .tracking(1.5)
-                    Text(game.totalBet.formatted())
-                        .font(.system(size: 25, weight: .heavy, design: .serif))
-                        .foregroundStyle(goldGradient)
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.4)
-                        .lineLimit(1)
-                        .contentTransition(.numericText())
-                }
-                .shadow(color: .black.opacity(0.8), radius: 2, y: 1)
-            }
-
-            seat(Art.Bar.betUp, width, h) {
-                betGlyph(minus: false, enabled: !game.isSpinning && canAdjustBet(up: true)) {
-                    game.adjustBet(by: 1)
-                }
-            }
-
-            seat(Art.Bar.spin, width, h) { spinButton }
-        }
-        .frame(width: width, height: h)
+    /// The 3D viewport is deliberately shorter than the window, so only three full
+    /// rows plus slivers show. The leftover band is `reelVoid`, reading as the dark
+    /// interior of the machine.
+    private func viewportHeight(fit: CGSize) -> CGFloat {
+        let w = fit.width * Cab.Window.w
+        let aspect = Double(game.mode.reels) / Cab.Window.visibleRows
+        // Never taller than the window itself — on three reels the bank is narrower
+        // than it is tall, so the height cap is what binds.
+        return min(w / aspect, fit.height * Cab.Window.h)
     }
 
-    /// Place a control at a slot's normalised centre within the control bar.
-    private func seat<V: View>(_ slot: Art.Bar.Slot, _ w: CGFloat, _ h: CGFloat,
+    /// Wants the full artwork visible, so this is a plain aspect fit. Drawing it
+    /// wider than the screen would enlarge the symbols, but it slices the lions —
+    /// they begin only 45px in from the artwork's edge.
+    private func cabinetSize(in container: CGSize) -> CGSize {
+        let width = min(container.width, container.height * Cab.aspect)
+        return CGSize(width: width, height: width / Cab.aspect)
+    }
+
+    /// Seat a control at a slot's normalised centre within the fitted artwork.
+    private func seat<V: View>(_ slot: Cab.Slot, _ fit: CGSize,
+                               _ ox: CGFloat, _ oy: CGFloat,
                                @ViewBuilder content: () -> V) -> some View {
         content()
-            .frame(width: w * slot.sw, height: h * slot.sh)
-            .position(x: w * slot.cx, y: h * slot.cy)
+            .frame(width: fit.width * slot.w, height: fit.height * slot.h)
+            .position(x: ox + fit.width * slot.cx, y: oy + fit.height * slot.cy)
     }
 
     // MARK: Controls
-
-    private func canAdjustBet(up: Bool) -> Bool {
-        guard let i = GameViewModel.betLevels.firstIndex(of: game.betPerLine) else { return true }
-        return up ? i < GameViewModel.betLevels.count - 1 : i > 0
-    }
 
     /// Bet +/− as solid gold bars rather than SF Symbols, which read as system UI
     /// pasted onto a hand-painted cabinet.
@@ -365,12 +378,12 @@ struct ContentView: View {
                         LinearGradient(colors: [.white.opacity(0.6), .clear, .black.opacity(0.35)],
                                        startPoint: .topLeading, endPoint: .bottomTrailing),
                         lineWidth: 2.5)
-                Text(game.isFreeSpin ? "FREE" : "SPIN")
-                    .font(.system(size: 21, weight: .black, design: .serif))
+                Text(game.spinButtonLabel)
+                    .font(.system(size: 20, weight: .black, design: .serif))
                     .foregroundStyle(game.canSpin
                                      ? Color(red: 0.26, green: 0.10, blue: 0)
                                      : Color.white.opacity(0.35))
-                    .minimumScaleFactor(0.6)
+                    .minimumScaleFactor(0.55)
                     .lineLimit(1)
             }
             .shadow(color: .black.opacity(0.6), radius: 5, y: 3)
@@ -395,7 +408,7 @@ struct ContentView: View {
             Image(systemName: systemName)
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(goldGradient)
-                .frame(width: 36, height: 36)
+                .frame(width: 34, height: 34)
                 .background(Circle().fill(Color.black.opacity(0.45)))
                 .overlay(Circle().strokeBorder(goldGradient.opacity(0.6), lineWidth: 1.5))
         }
@@ -406,21 +419,12 @@ struct ContentView: View {
 
     private var background: some View {
         ZStack {
-            if let bg = UIImage(named: "bg_throne_room") {
-                Image(uiImage: bg).resizable().scaledToFill().ignoresSafeArea()
-                    .overlay(Color.black.opacity(0.32).ignoresSafeArea())
-            } else {
-                // Until there's a throne-room backdrop, a centred radial lift keeps
-                // the empty area reading as depth rather than as a flat void.
-                ZStack {
-                    Art.backdrop
-                    RadialGradient(
-                        colors: [Color(red: 0.16, green: 0.06, blue: 0.30).opacity(0.85),
-                                 Color.clear],
-                        center: .center, startRadius: 40, endRadius: 520)
-                }
+            Cab.backdrop.ignoresSafeArea()
+            // A centred radial lift so the space around the cabinet reads as depth
+            // rather than a flat void.
+            RadialGradient(colors: [Color(red: 0.14, green: 0.05, blue: 0.26).opacity(0.8), .clear],
+                           center: .center, startRadius: 40, endRadius: 520)
                 .ignoresSafeArea()
-            }
             Color.white.opacity(winFlash ? 0.26 : 0)
                 .ignoresSafeArea().allowsHitTesting(false)
         }
@@ -437,7 +441,7 @@ struct ContentView: View {
                         .padding(.horizontal, 16).padding(.vertical, 9)
                         .background(Capsule().fill(Color.red.opacity(0.85)))
                         .shadow(color: .black.opacity(0.6), radius: 6, y: 3)
-                    Spacer().frame(height: 190)
+                    Spacer().frame(height: 40)
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
@@ -463,8 +467,8 @@ struct ContentView: View {
                         .font(.system(size: 13, weight: .heavy, design: .rounded))
                         .foregroundStyle(goldGradient)
                         .padding(.horizontal, 16).padding(.vertical, 8)
-                        .background(Capsule().fill(Color.black.opacity(0.6)))
-                    Spacer().frame(height: 190)
+                        .background(Capsule().fill(Color.black.opacity(0.65)))
+                    Spacer().frame(height: 40)
                 }
                 .transition(.opacity)
             }
@@ -486,21 +490,34 @@ struct ContentView: View {
 /// Placeholder for the credit store. The layout reserves the entry point now so the
 /// real thing drops in without another redesign.
 struct StoreSheet: View {
+    var onReset: () -> Void = {}
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    Label("Not wired up yet", systemImage: "hammer.fill")
+                    Button("Add \(GameViewModel.startingCredits.formatted()) credits") {
+                        onReset()
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                } header: {
+                    Text("For now")
+                } footer: {
+                    Text("Free, unlimited, and instant — there is no purchase here yet, "
+                         + "so this stands in for the store and keeps the game playable.")
+                }
+
+                Section {
+                    Label("Real store not wired up yet", systemImage: "hammer.fill")
                         .foregroundStyle(.orange)
                 } footer: {
-                    Text("This is where credit packs will go. Wiring it up means "
-                         + "StoreKit 2 products, a purchase flow, and restoring "
-                         + "purchases — plus an age rating and a review of the "
-                         + "App Store's rules for apps that sell virtual currency "
-                         + "alongside slot mechanics (guidelines 3.1.1 and 4.7), and "
-                         + "the equivalent Google Play gambling policy.")
+                    Text("Credit packs go here. Wiring it up means StoreKit 2 products, "
+                         + "a purchase flow and restore, plus an age rating and a review "
+                         + "of the App Store rules for apps that sell virtual currency "
+                         + "alongside slot mechanics (guidelines 3.1.1 and 4.7), and the "
+                         + "equivalent Google Play gambling policy.")
                 }
             }
             .navigationTitle("Get Credits")

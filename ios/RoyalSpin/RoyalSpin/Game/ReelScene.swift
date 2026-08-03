@@ -43,6 +43,13 @@ enum ReelTuning {
     /// Angular size of one symbol cell.
     static var cellAngle: Double { 2 * .pi / Double(panelCount) }
 
+    /// Aspect of the cabinet's reel window (702 × 569 in the artwork). The camera
+    /// needs it to decide which axis is the binding constraint.
+    static let windowAspect: Double = 702.0 / 569.0
+
+    /// Rows of symbols the viewport shows: three full, plus a sliver above and below.
+    static let visibleRows: Double = 3.25
+
     // Shape follows the spec in assets/symbols/README.md — accelerate, cruise,
     // staggered left-to-right stop, ease into the predetermined index, overshoot and
     // settle — but the durations are stretched well past the spec's minimums. At the
@@ -112,11 +119,32 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
     // Cache so we're not rebuilding a symbol texture every spin.
     private var materialCache: [Symbol: SCNMaterial] = [:]
 
-    init(strips: [[Symbol]] = ReelStrips.strips) {
+    /// Which machine is on screen. Changing it tears down and rebuilds the reel
+    /// bank, because the number of cylinders and the camera framing both depend on
+    /// it — see `rebuild(for:)`.
+    private(set) var mode: ReelMode
+
+    init(mode: ReelMode = .three, strips: [[Symbol]] = ReelStrips.strips) {
+        self.mode = mode
         self.strips = strips
         super.init()
         buildScene()
     }
+
+    /// Swap machines. Safe to call at any time; a spin in flight is abandoned.
+    func rebuild(for newMode: ReelMode) {
+        guard newMode != mode else { return }
+        mode = newMode
+        isSpinning = false
+        pendingResult = nil
+        for reel in reels { reel.node.removeFromParentNode() }
+        reels.removeAll()
+        cameraNode?.removeFromParentNode()
+        cameraNode = nil
+        buildScene()
+    }
+
+    private var cameraNode: SCNNode?
 
     // MARK: Scene construction
 
@@ -124,11 +152,18 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
         scene.background.contents = UIColor(red: 0.05, green: 0.02, blue: 0.09, alpha: 1)
 
         let camera = SCNCamera()
-        // Frame horizontally: the reel bank is much wider than it is tall, and the
-        // cabinet window is wider than it is tall too, so width is what has to fit.
-        // Locking the projection direction keeps the framing stable across devices
-        // instead of letting a taller screen quietly zoom in.
-        camera.projectionDirection = .horizontal
+        // Fit by whichever axis actually binds.
+        //
+        // Five reels are wider than they are tall (5.0 / 3.25 = 1.54 against the
+        // window's 1.23), so width is the constraint. Three reels are not
+        // (3.0 / 3.25 = 0.92), and fitting them by width would scale each symbol
+        // past the height of the glass and crop the top and bottom rows. Picking the
+        // binding axis makes both machines fill the window correctly with no
+        // per-mode fudge factors.
+        let bank = Double(mode.reels) * Double(ReelTuning.reelSpacing)
+        let visibleRows = ReelTuning.visibleRows
+        camera.projectionDirection =
+            bank / visibleRows >= ReelTuning.windowAspect ? .horizontal : .vertical
         camera.fieldOfView = 42
         camera.zNear = 0.1
         camera.zFar = 100
@@ -139,15 +174,14 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
         camera.wantsHDR = true
 
         let cameraNode = SCNNode()
+        self.cameraNode = cameraNode
         cameraNode.camera = camera
-        // Distance is derived, not eyeballed: to frame a bank of width W across a
-        // horizontal FOV θ at the plane of the front faces, the camera sits at
-        // W / (2·tan(θ/2)) beyond that plane — which is itself `radius` in front of
-        // the reel axis. No fudge factor: the five reels land exactly edge to edge
-        // with the cabinet window.
-        let bankWidth = Double(Paylines.reels) * Double(ReelTuning.reelSpacing)
+        // Distance is derived, not eyeballed: to frame an extent E across a FOV θ at
+        // the plane of the front faces, the camera sits at E / (2·tan(θ/2)) beyond
+        // that plane — which is itself `radius` in front of the reel axis.
         let halfFOV = (camera.fieldOfView * .pi / 180) / 2
-        let distance = bankWidth / (2 * tan(halfFOV)) + Double(ReelTuning.radius)
+        let extent = camera.projectionDirection == .horizontal ? bank : visibleRows
+        let distance = extent / (2 * tan(halfFOV)) + Double(ReelTuning.radius)
         cameraNode.position = SCNVector3(0, 0, CGFloat(distance))
         scene.rootNode.addChildNode(cameraNode)
 
@@ -156,8 +190,8 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
         // expensive thing in the scene and contributed nothing.
 
         // Reels.
-        let totalWidth = CGFloat(Paylines.reels - 1) * ReelTuning.reelSpacing
-        for i in 0 ..< Paylines.reels {
+        let totalWidth = CGFloat(mode.reels - 1) * ReelTuning.reelSpacing
+        for i in 0 ..< mode.reels {
             let reel = buildReel(index: i)
             reel.node.position = SCNVector3(
                 CGFloat(i) * ReelTuning.reelSpacing - totalWidth / 2, 0, 0

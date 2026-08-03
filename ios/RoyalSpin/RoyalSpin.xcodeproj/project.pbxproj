@@ -14,6 +14,7 @@
 		F6B7AC3DF43D78A25EEBAF1B /* ReelScene.swift in Build */ = {isa = PBXBuildFile; fileRef = D5A0E29AB0A93531A4CCE0E5 /* ReelScene.swift */; };
 		5A545C1F290094A603E55CBF /* SymbolArt.swift in Build */ = {isa = PBXBuildFile; fileRef = 68B19BB70FE9B33E36C5708C /* SymbolArt.swift */; };
 		0C2C2246121BBD6AC493B8C3 /* ContentView.swift in Build */ = {isa = PBXBuildFile; fileRef = 62F6692BA4CEF25BC84BD70E /* ContentView.swift */; };
+		A253C0E86EC927BF90431851 /* Lobby.swift in Build */ = {isa = PBXBuildFile; fileRef = 79E628B98E4E5812B62AC335 /* Lobby.swift */; };
 		45D8FD00A7397CECB6AE6FB5 /* Sheets.swift in Build */ = {isa = PBXBuildFile; fileRef = 132FE2790FE26F6619A23874 /* Sheets.swift */; };
 		3ED0748C9F5D073F6CD36001 /* bust.wav in Build */ = {isa = PBXBuildFile; fileRef = F9329BEDA7DE07BA7DB67697 /* bust.wav */; };
 		5BCF790E5D535540D0FF7255 /* coin_ching.wav in Build */ = {isa = PBXBuildFile; fileRef = 58CFE1EA631FB74DDF21AF5C /* coin_ching.wav */; };
@@ -39,6 +40,7 @@
 		D5A0E29AB0A93531A4CCE0E5 /* ReelScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReelScene.swift; sourceTree = "<group>"; };
 		68B19BB70FE9B33E36C5708C /* SymbolArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolArt.swift; sourceTree = "<group>"; };
 		62F6692BA4CEF25BC84BD70E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		79E628B98E4E5812B62AC335 /* Lobby.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lobby.swift; sourceTree = "<group>"; };
 		132FE2790FE26F6619A23874 /* Sheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sheets.swift; sourceTree = "<group>"; };
 		F9329BEDA7DE07BA7DB67697 /* bust.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = bust.wav; sourceTree = "<group>"; };
 		58CFE1EA631FB74DDF21AF5C /* coin_ching.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = coin_ching.wav; sourceTree = "<group>"; };
@@ -132,6 +134,7 @@
 			isa = PBXGroup;
 			children = (
 				62F6692BA4CEF25BC84BD70E /* ContentView.swift */,
+				79E628B98E4E5812B62AC335 /* Lobby.swift */,
 				132FE2790FE26F6619A23874 /* Sheets.swift */,
 			);
 			path = UI;
@@ -234,6 +237,7 @@
 				F6B7AC3DF43D78A25EEBAF1B /* ReelScene.swift */,
 				5A545C1F290094A603E55CBF /* SymbolArt.swift */,
 				0C2C2246121BBD6AC493B8C3 /* ContentView.swift */,
+				A253C0E86EC927BF90431851 /* Lobby.swift */,
 				45D8FD00A7397CECB6AE6FB5 /* Sheets.swift */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

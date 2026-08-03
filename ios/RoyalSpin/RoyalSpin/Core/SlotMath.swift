@@ -279,12 +279,26 @@ public enum Paytable {
     /// Free spins awarded by a scatter hit. Kept identical across profiles — the
     /// bonus round is the reward for surviving, so it shouldn't get rarer as the
     /// game gets harsher.
-    public static func freeSpins(scatterCount: Int) -> Int {
-        switch scatterCount {
-        case 3:  return 8
-        case 4:  return 12
-        case 5:  return 20
-        default: return 0
+    ///
+    /// Three reels trigger on **two** seals, not three. With one seal every 28 stops
+    /// and only three reels to land on, requiring all three fires just once in 828
+    /// spins — a bonus the welcoming machine's players would essentially never see.
+    /// Two brings it to roughly 1 in 30.
+    public static func freeSpins(scatterCount: Int, mode: ReelMode) -> Int {
+        switch mode {
+        case .three:
+            switch scatterCount {
+            case 2:  return 6
+            case 3:  return 15
+            default: return 0
+            }
+        case .five:
+            switch scatterCount {
+            case 3:  return 8
+            case 4:  return 12
+            case 5:  return 20
+            default: return 0
+            }
         }
     }
 }
@@ -890,7 +904,7 @@ public final class SlotMachine: @unchecked Sendable {
             }
         }
         let scatterCredits = Paytable.scatterPay(count: scatterCount, volatility: volatility, mode: mode) * totalBet
-        let freeSpins = Paytable.freeSpins(scatterCount: scatterCount)
+        let freeSpins = Paytable.freeSpins(scatterCount: scatterCount, mode: mode)
 
         return SpinResult(
             grid: grid,

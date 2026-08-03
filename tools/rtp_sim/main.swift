@@ -75,7 +75,8 @@ func simulate(_ mode: ReelMode, _ volatility: Volatility, nearMiss: NearMissConf
         if r.anticipation.contains(true) { anticipationSpins += 1 }
         returned += r.totalWin
         if r.isWin { hits += 1 }
-        if r.scatterCount >= 3 { scatterHits += 1 }
+        // Count actual bonus triggers, not raw scatters — three reels trigger on two.
+        if r.freeSpinsAwarded > 0 { scatterHits += 1 }
         biggestWin = max(biggestWin, r.totalWin)
         tierCounts[r.tier.rawValue] += 1
         for w in r.lineWins { symbolCredits[w.symbol, default: 0] += w.credits }

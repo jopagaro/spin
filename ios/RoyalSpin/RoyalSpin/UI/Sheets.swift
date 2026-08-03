@@ -103,7 +103,13 @@ struct SettingsSheet: View {
 
 struct PaytableSheet: View {
     let volatility: Volatility
+    let mode: ReelMode
     @Environment(\.dismiss) private var dismiss
+
+    /// Which match lengths this machine can produce. Three reels can only ever
+    /// match three, so showing a 4× and 5× column would be showing pays that are
+    /// unreachable.
+    private var matchCounts: [Int] { mode == .three ? [3] : [3, 4, 5] }
 
     /// High to low, so the sheet reads like a real paytable.
     private var ordered: [Symbol] {
@@ -133,8 +139,8 @@ struct PaytableSheet: View {
                             Spacer()
 
                             HStack(spacing: 10) {
-                                ForEach(3 ... 5, id: \.self) { n in
-                                    let pay = Paytable.linePay(symbol, count: n, volatility: volatility)
+                                ForEach(matchCounts, id: \.self) { n in
+                                    let pay = Paytable.linePay(symbol, count: n, volatility: volatility, mode: mode)
                                     VStack(spacing: 0) {
                                         Text("\(n)×")
                                             .font(.system(size: 9, weight: .bold))
@@ -167,11 +173,11 @@ struct PaytableSheet: View {
                         }
                         Spacer()
                         HStack(spacing: 10) {
-                            ForEach(3 ... 5, id: \.self) { n in
+                            ForEach(matchCounts, id: \.self) { n in
                                 VStack(spacing: 0) {
                                     Text("\(n)×").font(.system(size: 9, weight: .bold))
                                         .foregroundStyle(.secondary)
-                                    let p = Paytable.scatterPay(count: n, volatility: volatility)
+                                    let p = Paytable.scatterPay(count: n, volatility: volatility, mode: mode)
                                     Text(p == 0 ? "—" : "\(p)")
                                         .font(.system(size: 13, weight: .heavy, design: .rounded))
                                         .monospacedDigit()
@@ -191,8 +197,8 @@ struct PaytableSheet: View {
                 }
 
                 Section {
-                    LabeledContent("Paylines", value: "\(Paylines.count)")
-                    LabeledContent("Grid", value: "\(Paylines.reels) × \(Paylines.rows)")
+                    LabeledContent("Paylines", value: "\(mode.lineCount)")
+                    LabeledContent("Grid", value: "\(mode.reels) × \(Paylines.rows)")
                     LabeledContent("Reel strip length", value: "\(ReelStrips.strips[0].count) stops")
                 } header: {
                     Text("Machine")

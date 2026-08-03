@@ -63,13 +63,21 @@ private enum Cab {
     /// A control slot: centre plus usable interior size, both normalised.
     struct Slot { let cx, cy, w, h: Double }
 
-    static let betDown = Slot(cx: 189 / imageW, cy: 1197 / imageH, w: 118 / imageW, h: 132 / imageH)
-    static let readout = Slot(cx: 379 / imageW, cy: 1199 / imageH, w: 120 / imageW, h: 76 / imageH)
-    static let betUp   = Slot(cx: 556 / imageW, cy: 1197 / imageH, w: 118 / imageW, h: 132 / imageH)
-    /// The well's purple interior is 186px across; the button is sized under that so
-    /// the artwork's gold ring stays visible all the way round rather than being
-    /// overlapped into a crescent.
-    static let spin    = Slot(cx: 815 / imageW, cy: 1200 / imageH, w: 152 / imageW, h: 152 / imageH)
+    // Centres measured from the artwork's *interior openings*, not from the gold
+    // outline. The rings carry decorative gems at their compass points, so the
+    // outline's bounding box is not concentric with the hole you actually see — the
+    // plus sat 8px left of its opening and SPIN 5px high before this. Sizes track the
+    // measured openings too, so each glyph fills its frame instead of floating in it.
+    //
+    //   betDown  opening 154 x 161 centred (193.4, 1200.5)
+    //   readout  opening 157 x 123 centred (380.2, 1199.4)
+    //   betUp    opening 154 x 167 centred (564.2, 1200.9)
+    //   spin     opening 234 x 236 centred (813.8, 1205.1)
+    static let betDown = Slot(cx: 193.4 / imageW, cy: 1200.5 / imageH, w: 148 / imageW, h: 155 / imageH)
+    static let readout = Slot(cx: 380.2 / imageW, cy: 1199.4 / imageH, w: 150 / imageW, h: 118 / imageH)
+    static let betUp   = Slot(cx: 564.2 / imageW, cy: 1200.9 / imageH, w: 148 / imageW, h: 160 / imageH)
+    /// Sized under the 234px opening so the artwork's gold ring stays fully visible.
+    static let spin    = Slot(cx: 813.8 / imageW, cy: 1205.1 / imageH, w: 210 / imageW, h: 210 / imageH)
 }
 
 // MARK: - Root
@@ -398,9 +406,12 @@ struct MachineView: View {
             ZStack {
                 Color.white.opacity(0.001)
 
+                // 21pt, not 26. The opening is ~77pt across and SPIN set at 26pt
+                // measures ~71pt, so it crowded the gold ring on both sides. This
+                // leaves it sitting clear inside the well.
                 Text(game.spinButtonLabel)
-                    .font(.system(size: 26, weight: .black, design: .serif))
-                    .tracking(1)
+                    .font(.system(size: 21, weight: .black, design: .serif))
+                    .tracking(0.5)
                     .foregroundStyle(game.canSpin
                                      ? AnyShapeStyle(goldGradient)
                                      : AnyShapeStyle(Color.white.opacity(0.28)))

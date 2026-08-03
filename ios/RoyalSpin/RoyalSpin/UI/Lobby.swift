@@ -287,7 +287,9 @@ private struct MachineCard: View {
 }
 
 enum LobbyStyle {
-    static let backdrop = Color(red: 0x00 / 255.0, green: 0x00 / 255.0, blue: 0x1D / 255.0)
+    /// Same deep purple as the machine screen — sampled from the cabinet artwork
+    /// (#300040), so moving between lobby and machine has no colour shift.
+    static let backdrop = Color(red: 0x30 / 255.0, green: 0x00 / 255.0, blue: 0x40 / 255.0)
     static let gold = LinearGradient(
         colors: [Color(red: 1.0, green: 0.94, blue: 0.66),
                  Color(red: 0.95, green: 0.76, blue: 0.28),

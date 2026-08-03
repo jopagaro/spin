@@ -27,8 +27,14 @@ private enum Cab {
     static let imageH = 1536.0
     static var aspect: Double { imageW / imageH }
 
-    /// Exact border colour of the artwork, so the cabinet has no seam on screen.
-    static let backdrop = Color(red: 0x00 / 255.0, green: 0x00 / 255.0, blue: 0x1D / 255.0)
+    /// The artwork's own deep purple, sampled from the cabinet: it is the single
+    /// most common purple in the image at #300040.
+    ///
+    /// Used flat across the entire screen. Previously this was a near-black navy with
+    /// a radial gradient lifting the middle, which is why the strip above the cabinet
+    /// read as a different purple from the area around it — the gradient was simply
+    /// brighter near the centre of the screen than at the edges.
+    static let backdrop = Color(red: 0x30 / 255.0, green: 0x00 / 255.0, blue: 0x40 / 255.0)
     /// Inside the machine, behind the reels.
     static let reelVoid = Color(red: 0x15 / 255.0, green: 0x0A / 255.0, blue: 0x2E / 255.0)
 
@@ -41,13 +47,17 @@ private enum Cab {
         static var w: Double { x1 - x0 }
         static var h: Double { y1 - y0 }
 
-        /// Rows the viewport shows: three full plus a sliver above and below.
+        /// Apparent vertical extent of exactly three rows, in front-plane units.
         ///
-        /// The camera frames a fixed number of symbols, so the vertical extent it
-        /// shows follows from the viewport's aspect ratio. Panels foreshorten as they
-        /// curve away, which is why this isn't simply 3 + 2×sliver — asking for a 20%
-        /// sliver naively produced a 30% one.
-        static let visibleRows = 3.25
+        /// Not 3.0. The reels are a cylinder, so the rows above and below centre sit
+        /// *deeper* than the middle one (z = R·cos Δ rather than R), and perspective
+        /// shrinks them toward the centre. Three rows therefore project into 2.76 units,
+        /// not 3.0 — sizing the viewport to 3.0 leaves 0.24 units of slack, which is
+        /// precisely the gap the next row peeked through.
+        ///
+        /// Derived: the outer edge of row ±1 is at world y = R·sin Δ + ½·cos Δ = 1.470,
+        /// at depth z = 2.117. Solving apparent(E) = E/2 for that point gives E = 2.7616.
+        static let visibleRows = 2.7616
     }
 
     /// A control slot: centre plus usable interior size, both normalised.
@@ -365,27 +375,34 @@ struct MachineView: View {
     private var spinButton: some View {
         Button(action: spin) {
             ZStack {
+                // Purple body with a gold rim, matching the cabinet rather than
+                // competing with it. Greys out whenever the button can't be used —
+                // mid-spin or out of credits — which `canSpin` already covers.
                 Circle()
                     .fill(RadialGradient(
                         colors: game.canSpin
-                            ? [Color(red: 1.00, green: 0.88, blue: 0.48),
-                               Color(red: 0.90, green: 0.56, blue: 0.10),
-                               Color(red: 0.48, green: 0.19, blue: 0.02)]
-                            : [Color(white: 0.34), Color(white: 0.16)],
-                        center: .init(x: 0.32, y: 0.26), startRadius: 1, endRadius: 90))
+                            ? [Color(red: 0.42, green: 0.10, blue: 0.56),
+                               Color(red: 0.28, green: 0.02, blue: 0.38),
+                               Color(red: 0.15, green: 0.00, blue: 0.21)]
+                            : [Color(white: 0.30), Color(white: 0.19), Color(white: 0.12)],
+                        center: .init(x: 0.34, y: 0.28), startRadius: 1, endRadius: 90))
+
                 Circle()
-                    .strokeBorder(
-                        LinearGradient(colors: [.white.opacity(0.6), .clear, .black.opacity(0.35)],
-                                       startPoint: .topLeading, endPoint: .bottomTrailing),
-                        lineWidth: 2.5)
+                    .strokeBorder(game.canSpin
+                                  ? AnyShapeStyle(goldGradient)
+                                  : AnyShapeStyle(Color.white.opacity(0.22)),
+                                  lineWidth: 3)
+
                 Text(game.spinButtonLabel)
                     .font(.system(size: 20, weight: .black, design: .serif))
                     .foregroundStyle(game.canSpin
-                                     ? Color(red: 0.26, green: 0.10, blue: 0)
-                                     : Color.white.opacity(0.35))
+                                     ? AnyShapeStyle(goldGradient)
+                                     : AnyShapeStyle(Color.white.opacity(0.30)))
                     .minimumScaleFactor(0.55)
                     .lineLimit(1)
+                    .multilineTextAlignment(.center)
             }
+            .contentShape(Circle())
             .shadow(color: .black.opacity(0.6), radius: 5, y: 3)
             .scaleEffect(spinPressed ? 0.92 : 1)
         }
@@ -419,12 +436,9 @@ struct MachineView: View {
 
     private var background: some View {
         ZStack {
+            // Flat and uniform. No gradient: any falloff makes the area above the
+            // cabinet a visibly different purple from the area beside it.
             Cab.backdrop.ignoresSafeArea()
-            // A centred radial lift so the space around the cabinet reads as depth
-            // rather than a flat void.
-            RadialGradient(colors: [Color(red: 0.14, green: 0.05, blue: 0.26).opacity(0.8), .clear],
-                           center: .center, startRadius: 40, endRadius: 520)
-                .ignoresSafeArea()
             Color.white.opacity(winFlash ? 0.26 : 0)
                 .ignoresSafeArea().allowsHitTesting(false)
         }

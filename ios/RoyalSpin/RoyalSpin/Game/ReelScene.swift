@@ -47,8 +47,17 @@ enum ReelTuning {
     /// needs it to decide which axis is the binding constraint.
     static let windowAspect: Double = 702.0 / 569.0
 
-    /// Rows of symbols the viewport shows: three full, plus a sliver above and below.
-    static let visibleRows: Double = 3.25
+    /// Apparent vertical extent of exactly three rows, in front-plane units.
+    ///
+    /// Not 3.0. The reels are a cylinder, so the rows above and below centre sit
+    /// *deeper* than the middle one (z = R·cos Δ rather than R), and perspective
+    /// shrinks them toward the centre. Three rows therefore project into 2.76 units,
+    /// not 3.0 — sizing the viewport to 3.0 leaves 0.24 units of slack, which is
+    /// precisely the gap the next row peeked through.
+    ///
+    /// Derived: the outer edge of row ±1 is at world y = R·sin Δ + ½·cos Δ = 1.470,
+    /// at depth z = 2.117. Solving apparent(E) = E/2 for that point gives E = 2.7616.
+    static let visibleRows: Double = 2.7616
 
     // Shape follows the spec in assets/symbols/README.md — accelerate, cruise,
     // staggered left-to-right stop, ease into the predetermined index, overshoot and

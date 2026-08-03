@@ -194,18 +194,23 @@ public enum Paytable {
             case .crown:     return 322
             case .royalSeal: return 0
             }
+        // The Shield stops paying. It is the single most common symbol, so removing
+        // it alone takes roughly a fifth of all winning combinations off the table —
+        // which is what separates this tier from Gentle. Previously Classic paid on
+        // exactly the same symbols as Gentle and merely paid less, so the two had an
+        // identical hit rate and only one of them was a distinct game.
         case .classic:
             switch symbol {
-            case .shield:    return 2
+            case .shield:    return 0
             case .chalice:   return 3
             case .sceptre:   return 4
             case .joker:     return 8
-            case .knight:    return 10
-            case .princess:  return 17
-            case .prince:    return 23
-            case .queen:     return 36
-            case .king:      return 54
-            case .crown:     return 352
+            case .knight:    return 11
+            case .princess:  return 18
+            case .prince:    return 24
+            case .queen:     return 37
+            case .king:      return 56
+            case .crown:     return 366
             case .royalSeal: return 0
             }
         // The three low symbols pay nothing. They're also the most common, so that

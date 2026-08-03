@@ -390,37 +390,27 @@ struct MachineView: View {
 
     private var spinButton: some View {
         Button(action: spin) {
+            // Just the word. The cabinet artwork already draws the round button well
+            // — purple face, gold ring, the lot — so drawing another circle on top
+            // only ever put a second button inside the first one. The text sits in
+            // the well the artwork provides; the transparent circle behind it is the
+            // tap target, nothing more.
             ZStack {
-                // Purple body with a gold rim, matching the cabinet rather than
-                // competing with it. Greys out whenever the button can't be used —
-                // mid-spin or out of credits — which `canSpin` already covers.
-                Circle()
-                    .fill(RadialGradient(
-                        colors: game.canSpin
-                            ? [Color(red: 0.42, green: 0.10, blue: 0.56),
-                               Color(red: 0.28, green: 0.02, blue: 0.38),
-                               Color(red: 0.15, green: 0.00, blue: 0.21)]
-                            : [Color(white: 0.30), Color(white: 0.19), Color(white: 0.12)],
-                        center: .init(x: 0.34, y: 0.28), startRadius: 1, endRadius: 90))
-
-                Circle()
-                    .strokeBorder(game.canSpin
-                                  ? AnyShapeStyle(goldGradient)
-                                  : AnyShapeStyle(Color.white.opacity(0.22)),
-                                  lineWidth: 3)
+                Color.white.opacity(0.001)
 
                 Text(game.spinButtonLabel)
-                    .font(.system(size: 20, weight: .black, design: .serif))
+                    .font(.system(size: 26, weight: .black, design: .serif))
+                    .tracking(1)
                     .foregroundStyle(game.canSpin
                                      ? AnyShapeStyle(goldGradient)
-                                     : AnyShapeStyle(Color.white.opacity(0.30)))
-                    .minimumScaleFactor(0.55)
+                                     : AnyShapeStyle(Color.white.opacity(0.28)))
+                    .shadow(color: .black.opacity(0.85), radius: 3, y: 2)
+                    .minimumScaleFactor(0.5)
                     .lineLimit(1)
                     .multilineTextAlignment(.center)
             }
             .contentShape(Circle())
-            .shadow(color: .black.opacity(0.6), radius: 5, y: 3)
-            .scaleEffect(spinPressed ? 0.92 : 1)
+            .scaleEffect(spinPressed ? 0.90 : 1)
         }
         .buttonStyle(.plain)
         .disabled(!game.canSpin)

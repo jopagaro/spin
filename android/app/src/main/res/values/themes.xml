@@ -1,0 +1,8 @@
+<resources>
+    <!-- Edge-to-edge, no action bar: the cabinet artwork is the entire screen. -->
+    <style name="Theme.RoyalSpin" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#00001D</item>
+        <item name="android:navigationBarColor">#00001D</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

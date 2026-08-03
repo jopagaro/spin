@@ -1,0 +1,361 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0B7B7A603995B40A1E546E24 /* RoyalSpinApp.swift in Build */ = {isa = PBXBuildFile; fileRef = 4448CA460B3161A070094B84 /* RoyalSpinApp.swift */; };
+		E310FE9423770CCD4D7E4F9A /* SlotMath.swift in Build */ = {isa = PBXBuildFile; fileRef = 64B2BBC3FF400EB555DB85B1 /* SlotMath.swift */; };
+		CB3D4212B6A225B837435F9F /* AudioEngine.swift in Build */ = {isa = PBXBuildFile; fileRef = 32A174C593169D010D3D621F /* AudioEngine.swift */; };
+		7C5BEF8FB40B6151389D7EA4 /* GameViewModel.swift in Build */ = {isa = PBXBuildFile; fileRef = 4EBFB4BC306538A88991FCAF /* GameViewModel.swift */; };
+		F6B7AC3DF43D78A25EEBAF1B /* ReelScene.swift in Build */ = {isa = PBXBuildFile; fileRef = D5A0E29AB0A93531A4CCE0E5 /* ReelScene.swift */; };
+		5A545C1F290094A603E55CBF /* SymbolArt.swift in Build */ = {isa = PBXBuildFile; fileRef = 68B19BB70FE9B33E36C5708C /* SymbolArt.swift */; };
+		0C2C2246121BBD6AC493B8C3 /* ContentView.swift in Build */ = {isa = PBXBuildFile; fileRef = 62F6692BA4CEF25BC84BD70E /* ContentView.swift */; };
+		45D8FD00A7397CECB6AE6FB5 /* Sheets.swift in Build */ = {isa = PBXBuildFile; fileRef = 132FE2790FE26F6619A23874 /* Sheets.swift */; };
+		3ED0748C9F5D073F6CD36001 /* bust.wav in Build */ = {isa = PBXBuildFile; fileRef = F9329BEDA7DE07BA7DB67697 /* bust.wav */; };
+		5BCF790E5D535540D0FF7255 /* coin_ching.wav in Build */ = {isa = PBXBuildFile; fileRef = 58CFE1EA631FB74DDF21AF5C /* coin_ching.wav */; };
+		34B1B69FD0F7662C3CB9663A /* free_spins.wav in Build */ = {isa = PBXBuildFile; fileRef = 36A9B5F5459AA3ECB00718E9 /* free_spins.wav */; };
+		FCA8B50CE4D28254E8C359AD /* jackpot.wav in Build */ = {isa = PBXBuildFile; fileRef = 8E9463B941B08A2829F623B5 /* jackpot.wav */; };
+		7C62139E76BD8B6DB8FCD85D /* lever_pull.wav in Build */ = {isa = PBXBuildFile; fileRef = 48EE88EB14728318ADE12F74 /* lever_pull.wav */; };
+		CD6826A32C0ACF1F760DEA4A /* near_miss.wav in Build */ = {isa = PBXBuildFile; fileRef = 78EB544D3D2CA99476A97B77 /* near_miss.wav */; };
+		00F0BECEA74AB0EBFD3EFF52 /* reel_spin.wav in Build */ = {isa = PBXBuildFile; fileRef = 5C999DD832F7FA39CDD0081B /* reel_spin.wav */; };
+		B8863621C1F18BD54BA64B11 /* reel_stop.wav in Build */ = {isa = PBXBuildFile; fileRef = 38D9E65240D0B3432276A06F /* reel_stop.wav */; };
+		721CCDCE409F6DB554BF94DE /* scatter_hit.wav in Build */ = {isa = PBXBuildFile; fileRef = BD10B2879D1D9BBD1DAF18F3 /* scatter_hit.wav */; };
+		E6956D9354535A0F697B7BDA /* ui_tap.wav in Build */ = {isa = PBXBuildFile; fileRef = 572675E4699E61B8F04CC869 /* ui_tap.wav */; };
+		64CA030C71CBFF661DA9979B /* win_big.wav in Build */ = {isa = PBXBuildFile; fileRef = 5ABA350C4DDF5B9552421A52 /* win_big.wav */; };
+		5600866D3E8F96CD5E9068C3 /* win_nice.wav in Build */ = {isa = PBXBuildFile; fileRef = 7D92C32FDF3B9016051010B4 /* win_nice.wav */; };
+		063BBD77142974ACD17FFC78 /* win_small.wav in Build */ = {isa = PBXBuildFile; fileRef = B08F009F1B6E42C769721562 /* win_small.wav */; };
+		17BEC5936F7F4D4DE0C38345 /* Assets.xcassets in Build */ = {isa = PBXBuildFile; fileRef = B5FFB57704AB145BFE9DDB27 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		4448CA460B3161A070094B84 /* RoyalSpinApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoyalSpinApp.swift; sourceTree = "<group>"; };
+		64B2BBC3FF400EB555DB85B1 /* SlotMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotMath.swift; sourceTree = "<group>"; };
+		32A174C593169D010D3D621F /* AudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngine.swift; sourceTree = "<group>"; };
+		4EBFB4BC306538A88991FCAF /* GameViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewModel.swift; sourceTree = "<group>"; };
+		D5A0E29AB0A93531A4CCE0E5 /* ReelScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReelScene.swift; sourceTree = "<group>"; };
+		68B19BB70FE9B33E36C5708C /* SymbolArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolArt.swift; sourceTree = "<group>"; };
+		62F6692BA4CEF25BC84BD70E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		132FE2790FE26F6619A23874 /* Sheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sheets.swift; sourceTree = "<group>"; };
+		F9329BEDA7DE07BA7DB67697 /* bust.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = bust.wav; sourceTree = "<group>"; };
+		58CFE1EA631FB74DDF21AF5C /* coin_ching.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = coin_ching.wav; sourceTree = "<group>"; };
+		36A9B5F5459AA3ECB00718E9 /* free_spins.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = free_spins.wav; sourceTree = "<group>"; };
+		8E9463B941B08A2829F623B5 /* jackpot.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = jackpot.wav; sourceTree = "<group>"; };
+		48EE88EB14728318ADE12F74 /* lever_pull.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = lever_pull.wav; sourceTree = "<group>"; };
+		78EB544D3D2CA99476A97B77 /* near_miss.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = near_miss.wav; sourceTree = "<group>"; };
+		5C999DD832F7FA39CDD0081B /* reel_spin.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = reel_spin.wav; sourceTree = "<group>"; };
+		38D9E65240D0B3432276A06F /* reel_stop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = reel_stop.wav; sourceTree = "<group>"; };
+		BD10B2879D1D9BBD1DAF18F3 /* scatter_hit.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = scatter_hit.wav; sourceTree = "<group>"; };
+		572675E4699E61B8F04CC869 /* ui_tap.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ui_tap.wav; sourceTree = "<group>"; };
+		5ABA350C4DDF5B9552421A52 /* win_big.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = win_big.wav; sourceTree = "<group>"; };
+		7D92C32FDF3B9016051010B4 /* win_nice.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = win_nice.wav; sourceTree = "<group>"; };
+		B08F009F1B6E42C769721562 /* win_small.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = win_small.wav; sourceTree = "<group>"; };
+		B5FFB57704AB145BFE9DDB27 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A8792157CB4F27FB949C035F /* RoyalSpin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoyalSpin.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0EB9F436983BFDE3C85FBAF7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		66474652908ED2E0775E04A9 = {
+			isa = PBXGroup;
+			children = (
+				163602B8783240B87952E97F /* RoyalSpin */,
+				158EFF22A6EF5F98E381D118 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		163602B8783240B87952E97F /* RoyalSpin */ = {
+			isa = PBXGroup;
+			children = (
+				F6590B128DF12B49B19F2409 /* Audio */,
+				635D92559AB6983C86D411AA /* Core */,
+				20AD6AD5B10CF36E662E4BBC /* Game */,
+				3C7A3A8197F0FA0604E74CAD /* UI */,
+				B5FFB57704AB145BFE9DDB27 /* Assets.xcassets */,
+				4448CA460B3161A070094B84 /* RoyalSpinApp.swift */,
+			);
+			path = RoyalSpin;
+			sourceTree = "<group>";
+		};
+		F6590B128DF12B49B19F2409 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				F9329BEDA7DE07BA7DB67697 /* bust.wav */,
+				58CFE1EA631FB74DDF21AF5C /* coin_ching.wav */,
+				36A9B5F5459AA3ECB00718E9 /* free_spins.wav */,
+				8E9463B941B08A2829F623B5 /* jackpot.wav */,
+				48EE88EB14728318ADE12F74 /* lever_pull.wav */,
+				78EB544D3D2CA99476A97B77 /* near_miss.wav */,
+				5C999DD832F7FA39CDD0081B /* reel_spin.wav */,
+				38D9E65240D0B3432276A06F /* reel_stop.wav */,
+				BD10B2879D1D9BBD1DAF18F3 /* scatter_hit.wav */,
+				572675E4699E61B8F04CC869 /* ui_tap.wav */,
+				5ABA350C4DDF5B9552421A52 /* win_big.wav */,
+				7D92C32FDF3B9016051010B4 /* win_nice.wav */,
+				B08F009F1B6E42C769721562 /* win_small.wav */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		635D92559AB6983C86D411AA /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				64B2BBC3FF400EB555DB85B1 /* SlotMath.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		20AD6AD5B10CF36E662E4BBC /* Game */ = {
+			isa = PBXGroup;
+			children = (
+				32A174C593169D010D3D621F /* AudioEngine.swift */,
+				4EBFB4BC306538A88991FCAF /* GameViewModel.swift */,
+				D5A0E29AB0A93531A4CCE0E5 /* ReelScene.swift */,
+				68B19BB70FE9B33E36C5708C /* SymbolArt.swift */,
+			);
+			path = Game;
+			sourceTree = "<group>";
+		};
+		3C7A3A8197F0FA0604E74CAD /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				62F6692BA4CEF25BC84BD70E /* ContentView.swift */,
+				132FE2790FE26F6619A23874 /* Sheets.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		158EFF22A6EF5F98E381D118 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A8792157CB4F27FB949C035F /* RoyalSpin.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		34A04005BCAF206EEC990BD9 /* RoyalSpin */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 80E10D3103B33FBE1ABB3AC8;
+			buildPhases = (
+				D7C1BFE7D80B8EB4BA9DF36D /* Sources */,
+				0EB9F436983BFDE3C85FBAF7 /* Frameworks */,
+				25C4D3F7D04816FB01CEFF95 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RoyalSpin;
+			productName = RoyalSpin;
+			productReference = A8792157CB4F27FB949C035F /* RoyalSpin.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		244210E48437B6556980A702 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					34A04005BCAF206EEC990BD9 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = DE9897722E12636A76F08091;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 66474652908ED2E0775E04A9;
+			productRefGroup = 158EFF22A6EF5F98E381D118 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				34A04005BCAF206EEC990BD9 /* RoyalSpin */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		25C4D3F7D04816FB01CEFF95 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3ED0748C9F5D073F6CD36001 /* bust.wav */,
+				5BCF790E5D535540D0FF7255 /* coin_ching.wav */,
+				34B1B69FD0F7662C3CB9663A /* free_spins.wav */,
+				FCA8B50CE4D28254E8C359AD /* jackpot.wav */,
+				7C62139E76BD8B6DB8FCD85D /* lever_pull.wav */,
+				CD6826A32C0ACF1F760DEA4A /* near_miss.wav */,
+				00F0BECEA74AB0EBFD3EFF52 /* reel_spin.wav */,
+				B8863621C1F18BD54BA64B11 /* reel_stop.wav */,
+				721CCDCE409F6DB554BF94DE /* scatter_hit.wav */,
+				E6956D9354535A0F697B7BDA /* ui_tap.wav */,
+				64CA030C71CBFF661DA9979B /* win_big.wav */,
+				5600866D3E8F96CD5E9068C3 /* win_nice.wav */,
+				063BBD77142974ACD17FFC78 /* win_small.wav */,
+				17BEC5936F7F4D4DE0C38345 /* Assets.xcassets */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D7C1BFE7D80B8EB4BA9DF36D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B7B7A603995B40A1E546E24 /* RoyalSpinApp.swift */,
+				E310FE9423770CCD4D7E4F9A /* SlotMath.swift */,
+				CB3D4212B6A225B837435F9F /* AudioEngine.swift */,
+				7C5BEF8FB40B6151389D7EA4 /* GameViewModel.swift */,
+				F6B7AC3DF43D78A25EEBAF1B /* ReelScene.swift */,
+				5A545C1F290094A603E55CBF /* SymbolArt.swift */,
+				0C2C2246121BBD6AC493B8C3 /* ContentView.swift */,
+				45D8FD00A7397CECB6AE6FB5 /* Sheets.swift */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		B42B90E8490C06A54E343411 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		BD6E07937127D10232DD22D0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		E2CD98AD757E673DBAC85E14 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Royal Spin";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.royalspin.game;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		892ED5189A081C8E8ACE8CEC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Royal Spin";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.royalspin.game;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DE9897722E12636A76F08091 /* Build configuration list for PBXProject */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B42B90E8490C06A54E343411 /* Debug */,
+				BD6E07937127D10232DD22D0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		80E10D3103B33FBE1ABB3AC8 /* Build configuration list for PBXNativeTarget */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E2CD98AD757E673DBAC85E14 /* Debug */,
+				892ED5189A081C8E8ACE8CEC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 244210E48437B6556980A702 /* Project object */;
+}

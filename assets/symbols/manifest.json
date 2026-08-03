@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "productionDirectory": "reel_512",
+  "masterDirectory": "masters",
+  "pixelSize": 512,
+  "spinAnimationUsesStaticSymbols": true,
+  "symbols": [
+    { "id": 0, "name": "shield", "file": "shield.png", "status": "core" },
+    { "id": 1, "name": "chalice", "file": "chalice.png", "status": "core" },
+    { "id": 2, "name": "sceptre", "file": "sceptre.png", "status": "core" },
+    { "id": 3, "name": "joker", "file": "joker.png", "status": "core" },
+    { "id": 4, "name": "knight", "file": "knight.png", "status": "core" },
+    { "id": 5, "name": "princess", "file": "princess.png", "status": "core" },
+    { "id": 6, "name": "prince", "file": "prince.png", "status": "core" },
+    { "id": 7, "name": "queen", "file": "queen.png", "status": "core" },
+    { "id": 8, "name": "king", "file": "king.png", "status": "core" },
+    { "id": 9, "name": "crown", "file": "crown.png", "status": "core", "role": "wild" },
+    { "id": 10, "name": "royal_seal", "file": "royal_seal.png", "status": "core", "role": "scatter" },
+    { "name": "ace", "file": "ace.png", "status": "expansion" },
+    { "name": "jack", "file": "jack.png", "status": "expansion" },
+    { "name": "ten", "file": "ten.png", "status": "expansion" },
+    { "name": "duke", "file": "duke.png", "status": "expansion" }
+  ]
+}

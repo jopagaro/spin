@@ -17,9 +17,11 @@ let spins = CommandLine.arguments.count > 1
     : 1_000_000
 
 let betPerLine = 1
-let totalBet = betPerLine * Paylines.count
+// Bet scales with the payline count, which differs per machine.
+func totalBet(_ m: ReelMode) -> Int { betPerLine * m.lineCount }
 
 struct Report {
+    let mode: ReelMode
     let volatility: Volatility
     let rtp: Double
     let hitFrequency: Double
@@ -44,9 +46,10 @@ struct Report {
     let anticipationRate: Double
 }
 
-func simulate(_ volatility: Volatility, nearMiss: NearMissConfig = .default) -> Report {
+func simulate(_ mode: ReelMode, _ volatility: Volatility, nearMiss: NearMissConfig = .default) -> Report {
+    let totalBet = totalBet(mode)
     // Fixed seed per profile so the numbers are reproducible run to run.
-    let machine = SlotMachine(seed: 0xC0FFEE_D15EA5E, volatility: volatility, nearMiss: nearMiss)
+    let machine = SlotMachine(seed: 0xC0FFEE_D15EA5E, mode: mode, volatility: volatility, nearMiss: nearMiss)
 
     var returned = 0
     var hits = 0
@@ -89,7 +92,7 @@ func simulate(_ volatility: Volatility, nearMiss: NearMissConfig = .default) -> 
     var bustSpins: [Int] = []
     for player in 0 ..< 2_000 {
         let m = SlotMachine(seed: UInt64(0xBA5E_BA11 &+ UInt64(player)),
-                            volatility: volatility, nearMiss: nearMiss)
+                            mode: mode, volatility: volatility, nearMiss: nearMiss)
         var balance = 100 * totalBet
         var n = 0
         while balance >= totalBet && n < 100_000 {
@@ -102,6 +105,7 @@ func simulate(_ volatility: Volatility, nearMiss: NearMissConfig = .default) -> 
     bustSpins.sort()
 
     return Report(
+        mode: mode,
         volatility: volatility,
         rtp: 100.0 * mean,
         hitFrequency: 100.0 * Double(hits) / Double(spins),
@@ -125,92 +129,68 @@ print("""
 ║  ROYAL SPIN — reel math report                                            ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
-  \(spins.formatted()) spins per profile · \(totalBet) credits/spin (\(Paylines.count) lines × \(betPerLine))
+  \(spins.formatted()) spins per machine × profile
 """)
 
 let start = Date()
-let reports = Volatility.allCases.map { simulate($0) }
-let elapsed = Date().timeIntervalSince(start)
+let tierNames = ["no win", "small (<3x)", "nice (3-10x)", "big (10-20x)", "mega (20-50x)", "JACKPOT (50x+)"]
 
-// ── Comparison table ────────────────────────────────────────────────────────
-print("""
+for mode in ReelMode.allCases {
+    let bet = totalBet(mode)
+    let reports = Volatility.allCases.map { simulate(mode, $0) }
 
-  ┌──────────────┬─────────┬───────────┬──────────┬───────────┬──────────────┐
-  │ profile      │   RTP   │ hit freq  │ 1 win in │  σ (vol)  │ median spins │
-  │              │         │           │  N spins │           │   to broke   │
-  ├──────────────┼─────────┼───────────┼──────────┼───────────┼──────────────┤
-""")
-for r in reports {
-    let name = r.volatility.displayName.padding(toLength: 12, withPad: " ", startingAt: 0)
-    print(String(format: "  │ %@ │ %6.2f%% │  %6.2f%%  │  %6.1f  │  %7.2f  │    %6d    │",
-                 name, r.rtp, r.hitFrequency, 100.0 / max(r.hitFrequency, 0.001),
-                 r.sigma, r.medianSpinsToBust))
-}
-print("  └──────────────┴─────────┴───────────┴──────────┴───────────┴──────────────┘")
-
-print("""
-
-  σ is the standard deviation of per-spin return in units of the bet — the industry's
-  actual definition of volatility. Higher σ = wilder swings. "Median spins to broke"
-  starts 2,000 simulated players at 100× the bet and counts spins until they can't
-  cover another one.
-""")
-
-// ── Per-profile detail ──────────────────────────────────────────────────────
-let tierNames = ["no win", "small (<3×)", "nice (3-10×)", "big (10-20×)", "mega (20-50×)", "JACKPOT (50×+)"]
-
-for r in reports {
-    print("\n  ══ \(r.volatility.displayName.uppercased()) ══ \(r.volatility.blurb)")
-    print("     biggest win seen: \(r.biggestWin.formatted()) credits (\(r.biggestWin / totalBet)× bet)   ·   3+ scatters: 1 in \(String(format: "%.0f", 100.0 / max(r.scatterRate, 0.0001))) spins")
-    print(String(format: "     near miss shown on %.1f%% of spins (%.2f%% of them 3-deep) · a reel stalls on %.1f%%",
-                 r.teaseRate, r.brutalTeaseRate, r.anticipationRate))
-    print("")
-    for (i, name) in tierNames.enumerated() {
-        let share = 100.0 * Double(r.tierCounts[i]) / Double(spins)
-        let bar = String(repeating: "█", count: max(0, Int(share.rounded())))
-        print(String(format: "     %-16@ %6.3f%%  %@", name as NSString, share, bar as NSString))
+    print("\n\n  ###  \(mode.displayName.uppercased())  ###   \(mode.reels)x\(Paylines.rows) grid, \(mode.lineCount) lines, \(bet) credits/spin")
+    print("  \(mode.blurb)\n")
+    print("  +--------------+---------+-----------+----------+-----------+--------------+")
+    print("  | profile      |   RTP   | hit freq  | 1 win in |  sigma    | spins broke  |")
+    print("  +--------------+---------+-----------+----------+-----------+--------------+")
+    for r in reports {
+        let name = r.volatility.displayName.padding(toLength: 12, withPad: " ", startingAt: 0)
+        print(String(format: "  | %@ | %6.2f%% |  %6.2f%%  |  %6.1f  |  %7.2f  |    %6d    |",
+                     name, r.rtp, r.hitFrequency, 100.0 / max(r.hitFrequency, 0.001),
+                     r.sigma, r.medianSpinsToBust))
     }
-    // Where the payout actually comes from.
-    let ordered = Symbol.allCases
-        .map { ($0, r.symbolCredits[$0] ?? 0) }
-        .filter { $0.1 > 0 }
-        .sorted { $0.1 > $1.1 }
-    print("")
-    var line = "     payout mix: "
-    for (s, c) in ordered.prefix(5) {
-        line += "\(s.displayName) \(String(format: "%.0f%%", 100.0 * Double(c) / Double(max(r.totalReturned, 1))))  "
+    print("  +--------------+---------+-----------+----------+-----------+--------------+")
+
+    for r in reports {
+        print("\n  -- \(r.volatility.displayName.uppercased()) -- \(r.volatility.blurb)")
+        print("     biggest win: \(r.biggestWin.formatted()) credits (\(r.biggestWin / bet)x bet)   ·   bonus: 1 in \(String(format: "%.0f", 100.0 / max(r.scatterRate, 0.0001))) spins")
+        print(String(format: "     near miss on %.1f%% of spins · a reel stalls on %.1f%%", r.teaseRate, r.anticipationRate))
+        for (i, name) in tierNames.enumerated() {
+            let share = 100.0 * Double(r.tierCounts[i]) / Double(spins)
+            let bar = String(repeating: "#", count: max(0, Int(share.rounded())))
+            print(String(format: "     %-16@ %6.3f%%  %@", name as NSString, share, bar as NSString))
+        }
     }
-    line += "Seal \(String(format: "%.0f%%", 100.0 * Double(r.scatterCredits) / Double(max(r.totalReturned, 1))))"
-    print(line)
 }
 
-// ── Near-miss neutrality proof ──────────────────────────────────────────────
-// Run each profile with teasing fully off and fully cruel. Every payout statistic
-// must come out identical to the digit — if it doesn't, the tease is cheating.
-print("\n  ══ NEAR-MISS NEUTRALITY CHECK ══")
-print("     Same seed, teasing off vs. cruel. RTP must match exactly.\n")
-print("     ┌──────────────┬────────────┬────────────┬────────────┬──────────┐")
-print("     │ profile      │  RTP  off  │ RTP cruel  │  Δ         │ verdict  │")
-print("     ├──────────────┼────────────┼────────────┼────────────┼──────────┤")
+// -- Near-miss neutrality proof --
+// Every payout statistic must be identical with teasing off vs cruel. If it isn't,
+// the tease is cheating.
+print("\n\n  ###  NEAR-MISS NEUTRALITY  ###   same seed, teasing off vs cruel\n")
+print("  +------------+--------------+------------+------------+------------+---------+")
+print("  | machine    | profile      |  RTP  off  | RTP cruel  |  delta     | verdict |")
+print("  +------------+--------------+------------+------------+------------+---------+")
 var allNeutral = true
-for v in Volatility.allCases {
-    let off   = simulate(v, nearMiss: .off)
-    let cruel = simulate(v, nearMiss: .cruel)
-    let delta = abs(off.rtp - cruel.rtp)
-    let ok = delta < 1e-9 && off.hitFrequency == cruel.hitFrequency
-    if !ok { allNeutral = false }
-    print(String(format: "     │ %@ │ %8.4f%% │ %8.4f%% │ %10.2e │ %@ │",
-                 v.displayName.padding(toLength: 12, withPad: " ", startingAt: 0),
-                 off.rtp, cruel.rtp, delta,
-                 (ok ? "  PASS  " : "  FAIL  ")))
+for mode in ReelMode.allCases {
+    for v in Volatility.allCases {
+        let off = simulate(mode, v, nearMiss: .off)
+        let cruel = simulate(mode, v, nearMiss: .cruel)
+        let delta = abs(off.rtp - cruel.rtp)
+        let ok = delta < 1e-9 && off.hitFrequency == cruel.hitFrequency
+        if !ok { allNeutral = false }
+        print(String(format: "  | %@ | %@ | %8.4f%% | %8.4f%% | %10.2e | %@ |",
+                     mode.displayName.padding(toLength: 10, withPad: " ", startingAt: 0),
+                     v.displayName.padding(toLength: 12, withPad: " ", startingAt: 0),
+                     off.rtp, cruel.rtp, delta, (ok ? " PASS  " : " FAIL  ")))
+    }
 }
-print("     └──────────────┴────────────┴────────────┴────────────┴──────────┘")
+print("  +------------+--------------+------------+------------+------------+---------+")
 print(allNeutral
-      ? "     ✓ Teasing changes which losing grid you see, never whether you won."
-      : "     ✗ REGRESSION: the tease is altering payouts. Fix findTease().")
+      ? "  OK: teasing changes which losing grid you see, never whether you won."
+      : "  REGRESSION: the tease is altering payouts. Fix findTease().")
 
-// ── RNG sanity ──────────────────────────────────────────────────────────────
-print("\n  ══ RNG UNIFORMITY ══ (reel 1 stop distribution)")
+// -- RNG sanity --
 var probe = Xoshiro256(seed: 12345)
 let stripLen = ReelStrips.strips[0].count
 var buckets = [Int](repeating: 0, count: stripLen)
@@ -218,17 +198,5 @@ let probes = 2_000_000
 for _ in 0 ..< probes { buckets[Int(probe.next(upperBound: UInt64(stripLen)))] += 1 }
 let expected = Double(probes) / Double(stripLen)
 let chi2 = buckets.reduce(0.0) { $0 + pow(Double($1) - expected, 2) / expected }
-print("     χ² = \(String(format: "%.1f", chi2)) with \(stripLen - 1) df — expect ≈ \(stripLen - 1); a much larger value means a biased RNG")
-
-print("\n  ══ REEL STRIPS ══")
-for (i, strip) in ReelStrips.strips.enumerated() {
-    var counts = [Symbol: Int]()
-    for s in strip { counts[s, default: 0] += 1 }
-    let summary = Symbol.allCases.compactMap { s -> String? in
-        guard let c = counts[s] else { return nil }
-        return "\(s.displayName.prefix(3)):\(c)"
-    }.joined(separator: " ")
-    print("     reel \(i + 1) (\(strip.count) stops)  \(summary)")
-}
-
-print("\n  simulated in \(String(format: "%.1fs", elapsed))\n")
+print("\n  RNG uniformity: chi2 = \(String(format: "%.1f", chi2)) with \(stripLen - 1) df (expect ~\(stripLen - 1))")
+print("  simulated in \(String(format: "%.1fs", Date().timeIntervalSince(start)))\n")

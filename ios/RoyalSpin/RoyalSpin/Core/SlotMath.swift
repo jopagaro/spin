@@ -182,30 +182,30 @@ public enum Paytable {
         switch v {
         case .gentle:
             switch symbol {
-            case .shield:    return 11
-            case .chalice:   return 13
-            case .sceptre:   return 15
-            case .joker:     return 22
-            case .knight:    return 28
-            case .princess:  return 40
-            case .prince:    return 52
-            case .queen:     return 78
-            case .king:      return 115
-            case .crown:     return 740
+            case .shield:    return 4
+            case .chalice:   return 5
+            case .sceptre:   return 6
+            case .joker:     return 10
+            case .knight:    return 12
+            case .princess:  return 17
+            case .prince:    return 23
+            case .queen:     return 34
+            case .king:      return 50
+            case .crown:     return 322
             case .royalSeal: return 0
             }
         case .classic:
             switch symbol {
-            case .shield:    return 7
-            case .chalice:   return 8
-            case .sceptre:   return 10
-            case .joker:     return 20
-            case .knight:    return 26
-            case .princess:  return 42
-            case .prince:    return 58
-            case .queen:     return 90
-            case .king:      return 135
-            case .crown:     return 880
+            case .shield:    return 2
+            case .chalice:   return 3
+            case .sceptre:   return 4
+            case .joker:     return 8
+            case .knight:    return 10
+            case .princess:  return 17
+            case .prince:    return 23
+            case .queen:     return 36
+            case .king:      return 54
+            case .crown:     return 352
             case .royalSeal: return 0
             }
         // The three low symbols pay nothing. They're also the most common, so that
@@ -221,13 +221,13 @@ public enum Paytable {
             case .shield:    return 0
             case .chalice:   return 0
             case .sceptre:   return 0
-            case .joker:     return 23
-            case .knight:    return 30
-            case .princess:  return 47
-            case .prince:    return 61
-            case .queen:     return 89
-            case .king:      return 131
-            case .crown:     return 890
+            case .joker:     return 9
+            case .knight:    return 12
+            case .princess:  return 19
+            case .prince:    return 24
+            case .queen:     return 35
+            case .king:      return 51
+            case .crown:     return 345
             case .royalSeal: return 0
             }
         }
@@ -256,9 +256,9 @@ public enum Paytable {
         case .three:
             guard count >= 3 else { return 0 }
             switch volatility {
-            case .gentle:  return 60
-            case .classic: return 90
-            case .brutal:  return 135
+            case .gentle:  return 52
+            case .classic: return 72
+            case .brutal:  return 105
             }
         case .five:
             switch (volatility, count) {
@@ -334,8 +334,8 @@ public enum ReelMode: String, CaseIterable, Codable, Sendable {
 
     public var blurb: String {
         switch self {
-        case .three: return "Classic 3×3, 5 lines. Bigger symbols, three of a kind only."
-        case .five:  return "Modern 5×3, 20 lines. Pays for 3, 4 or 5 in a row."
+        case .three: return "Classic 3×3, \(lineCount) lines. Bigger symbols, three of a kind only."
+        case .five:  return "Modern 5×3, \(lineCount) lines. Pays for 3, 4 or 5 in a row."
         }
     }
 
@@ -343,24 +343,24 @@ public enum ReelMode: String, CaseIterable, Codable, Sendable {
     /// reel, left to right.
     public var paylines: [[Int]] {
         switch self {
-        // Nine lines, not the classic five.
+        // The canonical classic: three horizontal rows plus the two diagonals.
         //
-        // This is the lever that makes the three-reel machine the welcoming one.
-        // RTP is *independent* of line count — the return per line-bet is the same
-        // whether you play 5 lines or 9 — but every extra line is another chance to
-        // hit, so hit frequency rises in step. Five lines measured 14.8%; nine takes
-        // it to roughly 25% without moving the payout percentage at all.
+        // This is what a real 3×3 machine has. The very first slots (Liberty Bell,
+        // 1895) showed one symbol per reel and paid on the middle row alone; once
+        // machines grew a 3×3 window, five lines became standard, with each coin
+        // inserted activating another one — which is where "bet max" comes from.
+        //
+        // An earlier revision added four V and zigzag shapes to push hit frequency
+        // from 12.9% to 22%. They worked, but V-shaped paylines are a 5-reel *video*
+        // slot convention and look anachronistic on three mechanical reels, so
+        // they're gone. Authenticity won over the hit rate.
         case .three:
             return [
-                [1, 1, 1],  // 1  straight middle
+                [1, 1, 1],  // 1  straight middle — the original single payline
                 [0, 0, 0],  // 2  straight top
                 [2, 2, 2],  // 3  straight bottom
                 [0, 1, 2],  // 4  diagonal down
                 [2, 1, 0],  // 5  diagonal up
-                [0, 1, 0],  // 6  shallow V, top
-                [2, 1, 2],  // 7  shallow V, bottom
-                [1, 0, 1],  // 8  peak
-                [1, 2, 1],  // 9  valley
             ]
         case .five:
             return [
@@ -427,8 +427,41 @@ public enum ReelStrips {
     /// The physical strips, built once. Each strip is shuffled deterministically
     /// and then de-clumped so the same symbol never appears three times in a row —
     /// long runs look broken when they scroll past on the cylinder.
+    /// Five-reel strips. Measured and signed off; don't adjust casually.
     public static let strips: [[Symbol]] = composition.enumerated().map { index, counts in
         buildStrip(counts: counts, seed: UInt64(0x9E3779B97F4A7C15 &+ UInt64(index)))
+    }
+
+    /// Three-reel strips — a *different* set, not the first three of the above.
+    ///
+    /// Real manufacturers cut different strips for different machines, and this one
+    /// has a job to do: it's the machine new players meet first, so it has to pay
+    /// often. With only three reels and five paylines, sharing the five-reel strips
+    /// hits just 1 in 6.7 spins, which is six dead pulls between wins — a bad first
+    /// thirty seconds.
+    ///
+    /// The lever is wild density: the Crown goes from 2–3 per strip to 5, and it
+    /// substitutes for everything, so it lifts *every* symbol's chance at once. That
+    /// buys the hit rate honestly — it's the Telnaes weighting technique, not a
+    /// cosmetic trick — and needs no anachronistic V-shaped paylines. The pay values
+    /// in `Paytable.triple` are scaled down to compensate, holding the return where
+    /// it should be.
+    private static let threeComposition: [[Symbol: Int]] = [
+        [.king: 4, .queen: 4, .prince: 5, .princess: 5, .knight: 6,
+         .joker: 6, .sceptre: 6, .chalice: 6, .shield: 7, .crown: 5, .royalSeal: 2],
+        [.king: 3, .queen: 4, .prince: 4, .princess: 5, .knight: 6,
+         .joker: 6, .sceptre: 6, .chalice: 7, .shield: 8, .crown: 5, .royalSeal: 2],
+        [.king: 3, .queen: 3, .prince: 4, .princess: 4, .knight: 6,
+         .joker: 6, .sceptre: 7, .chalice: 8, .shield: 8, .crown: 5, .royalSeal: 2],
+    ]
+
+    public static let threeStrips: [[Symbol]] = threeComposition.enumerated().map { index, counts in
+        buildStrip(counts: counts, seed: UInt64(0xC2B2AE3D27D4EB4F &+ UInt64(index)))
+    }
+
+    /// The strips a given machine runs on.
+    public static func strips(for mode: ReelMode) -> [[Symbol]] {
+        mode == .three ? threeStrips : strips
     }
 
     private static func buildStrip(counts: [Symbol: Int], seed: UInt64) -> [Symbol] {
@@ -667,7 +700,8 @@ public final class SlotMachine: @unchecked Sendable {
     /// near-miss silently reshuffles every future outcome.
     private var presentationRng: Xoshiro256
 
-    private let strips: [[Symbol]]
+    /// Follows `mode`, because each machine has its own cut of strips.
+    private var strips: [[Symbol]] { ReelStrips.strips(for: mode) }
 
     /// Changing this mid-session is fine — it only affects how results are scored,
     /// never how they're drawn, so the RNG stream stays continuous.
@@ -701,8 +735,7 @@ public final class SlotMachine: @unchecked Sendable {
     public init(seed: UInt64? = nil,
                 mode: ReelMode = .three,
                 volatility: Volatility = .brutal,
-                nearMiss: NearMissConfig = .default,
-                strips: [[Symbol]] = ReelStrips.strips) {
+                nearMiss: NearMissConfig = .default) {
         var entropy = SystemRandomNumberGenerator()
         let s = seed ?? entropy.next()
         self.rng = Xoshiro256(seed: s)
@@ -712,7 +745,6 @@ public final class SlotMachine: @unchecked Sendable {
         self.mode = mode
         self.volatility = volatility
         self.nearMiss = nearMiss
-        self.strips = strips
     }
 
     /// Grant guaranteed-win spins. Called when the player lands the bonus.

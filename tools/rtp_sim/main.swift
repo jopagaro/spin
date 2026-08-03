@@ -96,7 +96,9 @@ func simulate(_ mode: ReelMode, _ volatility: Volatility, nearMiss: NearMissConf
                             mode: mode, volatility: volatility, nearMiss: nearMiss)
         var balance = 100 * totalBet
         var n = 0
-        while balance >= totalBet && n < 100_000 {
+        // Capped: a table returning over 100% never busts, and without a bound the
+        // simulator hangs instead of reporting the problem.
+        while balance >= totalBet && n < 20_000 {
             balance -= totalBet
             balance += m.spin(betPerLine: betPerLine).totalWin
             n += 1

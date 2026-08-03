@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Simulator output, transcribed.
 ///
-/// These come from `tools/rtp_sim` running 400,000 spins per machine × profile
+/// These come from `tools/rtp_sim` running 200,000 spins per machine × profile
 /// against the same `SlotMath.swift` the app ships. They are hard-coded here rather
 /// than computed at runtime because deriving a true RTP needs millions of spins —
 /// far too slow to do on launch — but that means **they go stale if the paytable
@@ -32,14 +32,14 @@ struct MachineStats {
     var winsOneIn: Double { 100.0 / hitFrequency }
 
     static let all: [MachineStats] = [
-        // 3 reels — 3×3, 9 lines
-        .init(mode: .three, volatility: .gentle,  rtp: 98.68, hitFrequency: 21.98, maxWinMultiple: 105, bonusOneIn: 31),
-        .init(mode: .three, volatility: .classic, rtp: 98.91, hitFrequency: 21.98, maxWinMultiple: 119, bonusOneIn: 31),
-        .init(mode: .three, volatility: .brutal,  rtp: 92.34, hitFrequency: 9.75,  maxWinMultiple: 148, bonusOneIn: 31),
-        // 5 reels — 5×3, 20 lines
-        .init(mode: .five,  volatility: .gentle,  rtp: 95.31, hitFrequency: 35.32, maxWinMultiple: 193,  bonusOneIn: 96),
-        .init(mode: .five,  volatility: .classic, rtp: 90.55, hitFrequency: 21.50, maxWinMultiple: 335,  bonusOneIn: 96),
-        .init(mode: .five,  volatility: .brutal,  rtp: 91.43, hitFrequency: 8.78,  maxWinMultiple: 1358, bonusOneIn: 96),
+        // 3 reels — 3×3, 5 classic lines, wild-dense strips. Bet 5/spin.
+        .init(mode: .three, volatility: .gentle,  rtp: 96.25, hitFrequency: 23.51, maxWinMultiple: 74,   bonusOneIn: 31),
+        .init(mode: .three, volatility: .classic, rtp: 94.16, hitFrequency: 23.51, maxWinMultiple: 81,   bonusOneIn: 31),
+        .init(mode: .three, volatility: .brutal,  rtp: 92.18, hitFrequency: 13.20, maxWinMultiple: 107,  bonusOneIn: 31),
+        // 5 reels — 5×3, 20 lines. Bet 20/spin.
+        .init(mode: .five,  volatility: .gentle,  rtp: 95.03, hitFrequency: 35.23, maxWinMultiple: 193,  bonusOneIn: 97),
+        .init(mode: .five,  volatility: .classic, rtp: 90.11, hitFrequency: 21.43, maxWinMultiple: 335,  bonusOneIn: 97),
+        .init(mode: .five,  volatility: .brutal,  rtp: 90.14, hitFrequency: 8.75,  maxWinMultiple: 1358, bonusOneIn: 97),
     ]
 
     static func of(_ mode: ReelMode, _ volatility: Volatility) -> MachineStats {
@@ -157,7 +157,7 @@ struct LobbyView: View {
     }
 
     private var footnote: some View {
-        Text("Figures measured over 300,000 simulated spins per machine. "
+        Text("Figures measured over 200,000 simulated spins per machine. "
              + "Credits have no cash value and cannot be withdrawn.")
             .font(.system(size: 11))
             .foregroundStyle(.white.opacity(0.35))

@@ -105,7 +105,7 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
 
     let scene = SCNScene()
     private var reels: [Reel] = []
-    private let strips: [[Symbol]]
+    private var strips: [[Symbol]] { ReelStrips.strips(for: mode) }
 
     /// Fired on the main thread as each reel lands, with the reel index.
     var onReelStopped: ((Int) -> Void)?
@@ -124,9 +124,9 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
     /// it — see `rebuild(for:)`.
     private(set) var mode: ReelMode
 
-    init(mode: ReelMode = .three, strips: [[Symbol]] = ReelStrips.strips) {
+    init(mode: ReelMode = .three) {
         self.mode = mode
-        self.strips = strips
+        
         super.init()
         buildScene()
     }

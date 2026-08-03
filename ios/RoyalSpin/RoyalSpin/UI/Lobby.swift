@@ -63,8 +63,8 @@ extension ReelMode {
 
     var tagline: String {
         switch self {
-        case .three: return "Best place to start"
-        case .five:  return "Where the big money is"
+        case .three: return "Start your reign"
+        case .five:  return "For the biggest crowns"
         }
     }
 }
@@ -77,6 +77,7 @@ struct LobbyView: View {
     let bonusSpins: Int
     let onPick: (ReelMode, Volatility) -> Void
     let onBuy: () -> Void
+    var onBack: (() -> Void)? = nil
 
     var body: some View {
         ZStack {
@@ -121,6 +122,18 @@ struct LobbyView: View {
             }
 
             HStack(spacing: 10) {
+                if let onBack {
+                    Button(action: onBack) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(LobbyStyle.gold)
+                            .frame(width: 34, height: 34)
+                            .background(Circle().fill(.black.opacity(0.35)))
+                            .overlay(Circle().strokeBorder(LobbyStyle.gold.opacity(0.55), lineWidth: 1.5))
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 VStack(alignment: .leading, spacing: -3) {
                     Text("CREDITS")
                         .font(.system(size: 9, weight: .black, design: .rounded))
@@ -157,7 +170,7 @@ struct LobbyView: View {
     }
 
     private var footnote: some View {
-        Text("Figures measured over 200,000 simulated spins per machine. "
+        Text("Full odds for each machine are in its paytable. "
              + "Credits have no cash value and cannot be withdrawn.")
             .font(.system(size: 11))
             .foregroundStyle(.white.opacity(0.35))
@@ -251,13 +264,30 @@ private struct MachineCard: View {
         }
     }
 
+    /// Leads with the prize.
+    ///
+    /// Top win is the number that sells a machine, so it gets the space and the gold.
+    /// Return-to-player has moved to the paytable sheet — still one tap away, which
+    /// matters for an app that sells currency, but not competing for attention with
+    /// the reason someone would actually pick this cabinet.
     private var stat_row: some View {
         HStack(spacing: 0) {
-            statCell("RETURN", String(format: "%.1f%%", stats.rtp))
+            VStack(spacing: 2) {
+                Text("TOP WIN")
+                    .font(.system(size: 8, weight: .black, design: .rounded))
+                    .tracking(1)
+                    .foregroundStyle(.white.opacity(0.45))
+                Text("\(stats.maxWinMultiple)×")
+                    .font(.system(size: 26, weight: .black, design: .serif))
+                    .foregroundStyle(LobbyStyle.gold)
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+
             divider
             statCell("WINS", "1 in \(String(format: "%.1f", stats.winsOneIn))")
-            divider
-            statCell("TOP WIN", "\(stats.maxWinMultiple)×")
             divider
             statCell("BONUS", "1 in \(stats.bonusOneIn)")
         }

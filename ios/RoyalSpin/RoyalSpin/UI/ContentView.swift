@@ -78,26 +78,42 @@ private enum Cab {
 struct ContentView: View {
 
     @StateObject private var game = GameViewModel()
-    @State private var playing = false
+    @State private var screen: Screen = .welcome
     @State private var showStore = false
+
+    private enum Screen { case welcome, lobby, machine }
 
     var body: some View {
         Group {
-            if playing {
-                MachineView(game: game) { playing = false }
-            } else {
+            switch screen {
+            case .welcome:
+                WelcomeView(
+                    // Straight into the starter machine. No decision required first.
+                    onPlay: {
+                        game.selectMachine(mode: .three,
+                                           volatility: ReelMode.three.defaultVolatility)
+                        screen = .machine
+                    },
+                    onChooseMachine: { screen = .lobby }
+                )
+
+            case .lobby:
                 LobbyView(
                     credits: game.displayCredits,
                     bonusSpins: game.bonusSpins,
                     onPick: { mode, volatility in
                         game.selectMachine(mode: mode, volatility: volatility)
-                        playing = true
+                        screen = .machine
                     },
-                    onBuy: { showStore = true }
+                    onBuy: { showStore = true },
+                    onBack: { screen = .welcome }
                 )
+
+            case .machine:
+                MachineView(game: game) { screen = .lobby }
             }
         }
-        .animation(.easeInOut(duration: 0.25), value: playing)
+        .animation(.easeInOut(duration: 0.25), value: screen)
         .sheet(isPresented: $showStore) { StoreSheet(onReset: game.resetCredits) }
     }
 }

@@ -16,6 +16,7 @@
 		0C2C2246121BBD6AC493B8C3 /* ContentView.swift in Build */ = {isa = PBXBuildFile; fileRef = 62F6692BA4CEF25BC84BD70E /* ContentView.swift */; };
 		A253C0E86EC927BF90431851 /* Lobby.swift in Build */ = {isa = PBXBuildFile; fileRef = 79E628B98E4E5812B62AC335 /* Lobby.swift */; };
 		45D8FD00A7397CECB6AE6FB5 /* Sheets.swift in Build */ = {isa = PBXBuildFile; fileRef = 132FE2790FE26F6619A23874 /* Sheets.swift */; };
+		4497786B18F0F1C8BD8E462B /* Welcome.swift in Build */ = {isa = PBXBuildFile; fileRef = 6F2E0571D401C8ACEED28732 /* Welcome.swift */; };
 		3ED0748C9F5D073F6CD36001 /* bust.wav in Build */ = {isa = PBXBuildFile; fileRef = F9329BEDA7DE07BA7DB67697 /* bust.wav */; };
 		5BCF790E5D535540D0FF7255 /* coin_ching.wav in Build */ = {isa = PBXBuildFile; fileRef = 58CFE1EA631FB74DDF21AF5C /* coin_ching.wav */; };
 		34B1B69FD0F7662C3CB9663A /* free_spins.wav in Build */ = {isa = PBXBuildFile; fileRef = 36A9B5F5459AA3ECB00718E9 /* free_spins.wav */; };
@@ -42,6 +43,7 @@
 		62F6692BA4CEF25BC84BD70E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		79E628B98E4E5812B62AC335 /* Lobby.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lobby.swift; sourceTree = "<group>"; };
 		132FE2790FE26F6619A23874 /* Sheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sheets.swift; sourceTree = "<group>"; };
+		6F2E0571D401C8ACEED28732 /* Welcome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Welcome.swift; sourceTree = "<group>"; };
 		F9329BEDA7DE07BA7DB67697 /* bust.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = bust.wav; sourceTree = "<group>"; };
 		58CFE1EA631FB74DDF21AF5C /* coin_ching.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = coin_ching.wav; sourceTree = "<group>"; };
 		36A9B5F5459AA3ECB00718E9 /* free_spins.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = free_spins.wav; sourceTree = "<group>"; };
@@ -136,6 +138,7 @@
 				62F6692BA4CEF25BC84BD70E /* ContentView.swift */,
 				79E628B98E4E5812B62AC335 /* Lobby.swift */,
 				132FE2790FE26F6619A23874 /* Sheets.swift */,
+				6F2E0571D401C8ACEED28732 /* Welcome.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -239,6 +242,7 @@
 				0C2C2246121BBD6AC493B8C3 /* ContentView.swift */,
 				A253C0E86EC927BF90431851 /* Lobby.swift */,
 				45D8FD00A7397CECB6AE6FB5 /* Sheets.swift */,
+				4497786B18F0F1C8BD8E462B /* Welcome.swift */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

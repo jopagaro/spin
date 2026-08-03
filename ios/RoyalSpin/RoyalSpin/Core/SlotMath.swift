@@ -88,19 +88,25 @@ public enum Volatility: String, CaseIterable, Codable, Sendable {
     /// Rarely hits, pays enormously when it does. Hardest setting.
     case brutal
 
+    /// Player-facing names and copy.
+    ///
+    /// These sell the upside rather than warning about the downside — "Royal Ruin"
+    /// and "your balance drifts" described the maths accurately but read as a reason
+    /// not to play. The underlying case names stay honest for anyone reading the
+    /// code, and the measured figures are still one tap away in the paytable.
     public var displayName: String {
         switch self {
-        case .gentle:  return "Gentle"
-        case .classic: return "Classic"
-        case .brutal:  return "Royal Ruin"
+        case .gentle:  return "Steady"
+        case .classic: return "Balanced"
+        case .brutal:  return "High Stakes"
         }
     }
 
     public var blurb: String {
         switch self {
-        case .gentle:  return "Frequent small wins. Your balance drifts."
-        case .classic: return "A real casino floor machine."
-        case .brutal:  return "Almost never pays. When it does, you'll know."
+        case .gentle:  return "Wins land often. The best place to settle in."
+        case .classic: return "An even trade between how often you win and how much."
+        case .brutal:  return "Wins are rare — and the biggest in the house."
         }
     }
 }
@@ -330,17 +336,19 @@ public enum ReelMode: String, CaseIterable, Codable, Sendable {
 
     public var reels: Int { self == .three ? 3 : 5 }
 
+    /// Player-facing name. Deliberately places rather than machine specs — "3 Reels"
+    /// describes the hardware, "Kingdom" describes somewhere you'd want to go.
     public var displayName: String {
         switch self {
-        case .three: return "3 Reels"
-        case .five:  return "5 Reels"
+        case .three: return "Kingdom"
+        case .five:  return "Empire"
         }
     }
 
     public var blurb: String {
         switch self {
-        case .three: return "Classic 3×3, \(lineCount) lines. Bigger symbols, three of a kind only."
-        case .five:  return "Modern 5×3, \(lineCount) lines. Pays for 3, 4 or 5 in a row."
+        case .three: return "Classic 3×3 over \(lineCount) lines. Big symbols, wins land often."
+        case .five:  return "5×3 across \(lineCount) lines. Every line pays for 3, 4 or 5 in a row."
         }
     }
 

@@ -20,13 +20,14 @@ import SwiftUI
 
 // MARK: - Cabinet geometry
 
-/// Normalised (0…1) positions measured off `cabinet_frame.png`, which is 1024 × 1536.
-/// Replace the artwork and update these; nothing else in the file moves.
-private enum Cab {
-    static let imageW = 1024.0
-    static let imageH = 1536.0
-    static var aspect: Double { imageW / imageH }
-
+/// Per-machine cabinet artwork and its measured geometry. Each machine gets its own
+/// cabinet so the reel window's aspect can match that machine's reel bank — one
+/// window cannot fit both a 3×3 bank (1.09:1) and a 5×3 bank (1.81:1) without
+/// letterboxing one of them into dark voids.
+///
+/// Internal, not private: `ReelScene` reads the window aspect to pick the camera's
+/// binding axis, so the window is measured in exactly one place.
+enum Cab {
     /// The artwork's own deep purple, sampled from the cabinet: it is the single
     /// most common purple in the image at #300040.
     ///
@@ -35,49 +36,87 @@ private enum Cab {
     /// read as a different purple from the area around it — the gradient was simply
     /// brighter near the centre of the screen than at the edges.
     static let backdrop = Color(red: 0x30 / 255.0, green: 0x00 / 255.0, blue: 0x40 / 255.0)
-    /// Inside the machine, behind the reels.
+    /// Inside the machine, behind the reels. `ReelScene` paints its scene background
+    /// this exact colour so the letterbox bands and the scene interior read as one
+    /// surface.
     static let reelVoid = Color(red: 0x15 / 255.0, green: 0x0A / 255.0, blue: 0x2E / 255.0)
 
-    /// The chroma-keyed reel window: x 159–860, y 465–1033.
-    enum Window {
-        static let x0 = 159.0 / imageW, x1 = 860.0 / imageW
-        static let y0 = 465.0 / imageH, y1 = 1033.0 / imageH
-        static var midX: Double { (x0 + x1) / 2 }
-        static var midY: Double { (y0 + y1) / 2 }
-        static var w: Double { x1 - x0 }
-        static var h: Double { y1 - y0 }
-
-        /// Apparent vertical extent of exactly three rows, in front-plane units.
-        ///
-        /// Not 3.0. The reels are a cylinder, so the rows above and below centre sit
-        /// *deeper* than the middle one (z = R·cos Δ rather than R), and perspective
-        /// shrinks them toward the centre. Three rows therefore project into 2.76 units,
-        /// not 3.0 — sizing the viewport to 3.0 leaves 0.24 units of slack, which is
-        /// precisely the gap the next row peeked through.
-        ///
-        /// Derived: the outer edge of row ±1 is at world y = R·sin Δ + ½·cos Δ = 1.470,
-        /// at depth z = 2.117. Solving apparent(E) = E/2 for that point gives E = 2.7616.
-        static let visibleRows = 2.7616
-    }
+    /// Apparent vertical extent of exactly three rows, in front-plane units.
+    ///
+    /// Not 3.0. The reels are a cylinder, so the rows above and below centre sit
+    /// *deeper* than the middle one (z = R·cos Δ rather than R), and perspective
+    /// shrinks them toward the centre. Three rows therefore project into 2.76 units,
+    /// not 3.0 — sizing the viewport to 3.0 leaves 0.24 units of slack, which is
+    /// precisely the gap the next row peeked through.
+    ///
+    /// Derived: the outer edge of row ±1 is at world y = R·sin Δ + ½·cos Δ = 1.470,
+    /// at depth z = 2.117. Solving apparent(E) = E/2 for that point gives E = 2.7616.
+    static let visibleRows = 2.7616
 
     /// A control slot: centre plus usable interior size, both normalised.
     struct Slot { let cx, cy, w, h: Double }
 
-    // Centres measured from the artwork's *interior openings*, not from the gold
-    // outline. The rings carry decorative gems at their compass points, so the
-    // outline's bounding box is not concentric with the hole you actually see — the
-    // plus sat 8px left of its opening and SPIN 5px high before this. Sizes track the
-    // measured openings too, so each glyph fills its frame instead of floating in it.
-    //
-    //   betDown  opening 154 x 161 centred (193.4, 1200.5)
-    //   readout  opening 157 x 123 centred (380.2, 1199.4)
-    //   betUp    opening 154 x 167 centred (564.2, 1200.9)
-    //   spin     opening 234 x 236 centred (813.8, 1205.1)
-    static let betDown = Slot(cx: 193.4 / imageW, cy: 1200.5 / imageH, w: 148 / imageW, h: 155 / imageH)
-    static let readout = Slot(cx: 380.2 / imageW, cy: 1199.4 / imageH, w: 150 / imageW, h: 118 / imageH)
-    static let betUp   = Slot(cx: 564.2 / imageW, cy: 1200.9 / imageH, w: 148 / imageW, h: 160 / imageH)
-    /// Sized under the 234px opening so the artwork's gold ring stays fully visible.
-    static let spin    = Slot(cx: 813.8 / imageW, cy: 1205.1 / imageH, w: 210 / imageW, h: 210 / imageH)
+    /// One cabinet artwork: asset name, canvas size, chroma-keyed window rect, and
+    /// the measured interior openings of the four control wells. All positions are
+    /// pixel measurements off the master PNG, normalised here.
+    struct Spec {
+        let imageName: String
+        let imageW, imageH: Double
+        /// Window rect in master pixels.
+        let winPx: (x0: Double, x1: Double, y0: Double, y1: Double)
+        let betDown, readout, betUp, spin: Slot
+
+        var aspect: Double { imageW / imageH }
+        var winX0: Double { winPx.x0 / imageW }
+        var winX1: Double { winPx.x1 / imageW }
+        var winY0: Double { winPx.y0 / imageH }
+        var winY1: Double { winPx.y1 / imageH }
+        var winMidX: Double { (winX0 + winX1) / 2 }
+        var winMidY: Double { (winY0 + winY1) / 2 }
+        var winW: Double { winX1 - winX0 }
+        var winH: Double { winY1 - winY0 }
+        /// Width:height of the window opening itself, in pixels.
+        var windowAspect: Double { (winPx.x1 - winPx.x0) / (winPx.y1 - winPx.y0) }
+    }
+
+    static func spec(for mode: ReelMode) -> Spec { mode == .three ? three : five }
+
+    /// `cabinet_three.png` — measured off the master. Window opening 520 × 507
+    /// (x 252–771, y 514–1020), aspect 1.026 against the 3×3 bank's ideal 1.086:
+    /// the residual is a ~14px band top and bottom, filled with `reelVoid`.
+    ///
+    ///   betDown  opening  78 x  69 centred (255.5, 1138.0)
+    ///   readout  opening 154 x  56 centred (423.5, 1137.5)
+    ///   betUp    opening  78 x  69 centred (590.5, 1138.0)
+    ///   spin     opening 126 x 106 centred (753.5, 1142.5)
+    static let three = Spec(
+        imageName: "cabinet_three",
+        imageW: 1024, imageH: 1536,
+        winPx: (x0: 252, x1: 771, y0: 514, y1: 1020),
+        betDown: Slot(cx: 255.5 / 1024, cy: 1138.0 / 1536, w:  72 / 1024, h:  63 / 1536),
+        readout: Slot(cx: 423.5 / 1024, cy: 1137.5 / 1536, w: 146 / 1024, h:  50 / 1536),
+        betUp:   Slot(cx: 590.5 / 1024, cy: 1138.0 / 1536, w:  72 / 1024, h:  63 / 1536),
+        spin:    Slot(cx: 753.5 / 1024, cy: 1142.5 / 1536, w: 116 / 1024, h:  96 / 1536)
+    )
+
+    /// `cabinet_frame.png` — the original cabinet, still used by the five-reel
+    /// machine until its letterbox variant is regenerated (the first attempt came
+    /// out 2.94:1 against the needed 1.81:1). Window 702 × 568 (x 159–860,
+    /// y 465–1033).
+    ///
+    ///   betDown  opening 154 x 161 centred (193.4, 1200.5)
+    ///   readout  opening 157 x 123 centred (380.2, 1199.4)
+    ///   betUp    opening 154 x 167 centred (564.2, 1200.9)
+    ///   spin     opening 234 x 236 centred (813.8, 1205.1)
+    static let five = Spec(
+        imageName: "cabinet_frame",
+        imageW: 1024, imageH: 1536,
+        winPx: (x0: 159, x1: 860, y0: 465, y1: 1033),
+        betDown: Slot(cx: 193.4 / 1024, cy: 1200.5 / 1536, w: 148 / 1024, h: 155 / 1536),
+        readout: Slot(cx: 380.2 / 1024, cy: 1199.4 / 1536, w: 150 / 1024, h: 118 / 1536),
+        betUp:   Slot(cx: 564.2 / 1024, cy: 1200.9 / 1536, w: 148 / 1024, h: 160 / 1536),
+        spin:    Slot(cx: 813.8 / 1024, cy: 1205.1 / 1536, w: 210 / 1024, h: 210 / 1536)
+    )
 }
 
 // MARK: - Root
@@ -263,6 +302,9 @@ struct MachineView: View {
 
     // MARK: Cabinet
 
+    /// Geometry of whichever cabinet artwork is on screen.
+    private var spec: Cab.Spec { Cab.spec(for: game.mode) }
+
     private var cabinet: some View {
         GeometryReader { geo in
             let fit = cabinetSize(in: geo.size)
@@ -270,13 +312,13 @@ struct MachineView: View {
             let oy = (geo.size.height - fit.height) / 2
 
             ZStack {
-                // Dark interior filling the whole window. The 3D viewport is shorter
-                // than this, so these bands show above and below the reels.
+                // Dark interior filling the whole window. The 3D viewport can be
+                // shorter than this, so these bands show above and below the reels.
                 Rectangle()
                     .fill(Cab.reelVoid)
-                    .frame(width: fit.width * Cab.Window.w, height: fit.height * Cab.Window.h)
-                    .position(x: ox + fit.width * Cab.Window.midX,
-                              y: oy + fit.height * Cab.Window.midY)
+                    .frame(width: fit.width * spec.winW, height: fit.height * spec.winH)
+                    .position(x: ox + fit.width * spec.winMidX,
+                              y: oy + fit.height * spec.winMidY)
 
                 SceneView(
                     scene: scene.scene,
@@ -285,12 +327,12 @@ struct MachineView: View {
                     antialiasingMode: .multisampling2X,
                     delegate: scene
                 )
-                .frame(width: fit.width * Cab.Window.w,
+                .frame(width: fit.width * spec.winW,
                        height: viewportHeight(fit: fit))
-                .position(x: ox + fit.width * Cab.Window.midX,
-                          y: oy + fit.height * Cab.Window.midY)
+                .position(x: ox + fit.width * spec.winMidX,
+                          y: oy + fit.height * spec.winMidY)
 
-                if let art = UIImage(named: "cabinet_frame") {
+                if let art = UIImage(named: spec.imageName) {
                     // Framed to exactly the rect the slot overlays are computed
                     // against. Letting this default to `scaledToFit` inside the
                     // container draws it at a different scale and every control
@@ -303,60 +345,43 @@ struct MachineView: View {
                         .allowsHitTesting(false)
                 }
 
-                seat(Cab.betDown, fit, ox, oy) {
+                seat(spec.betDown, fit, ox, oy) {
                     betGlyph(minus: true,
                              enabled: !game.isSpinning && game.canAdjustBet(up: false)) {
                         game.adjustBet(by: -1)
                     }
                 }
 
-                seat(Cab.readout, fit, ox, oy) {
-                    VStack(spacing: -1) {
-                        Text("BET")
-                            .font(.system(size: 9, weight: .black, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.6))
-                            .tracking(1.5)
-                        Text(game.totalBet.formatted())
-                            .font(.system(size: 25, weight: .heavy, design: .serif))
-                            .foregroundStyle(goldGradient)
-                            .monospacedDigit()
-                            .minimumScaleFactor(0.4)
-                            .lineLimit(1)
-                            .contentTransition(.numericText())
-                    }
-                    .shadow(color: .black.opacity(0.8), radius: 2, y: 1)
-                }
+                seat(spec.readout, fit, ox, oy) { betReadout(fit: fit) }
 
-                seat(Cab.betUp, fit, ox, oy) {
+                seat(spec.betUp, fit, ox, oy) {
                     betGlyph(minus: false,
                              enabled: !game.isSpinning && game.canAdjustBet(up: true)) {
                         game.adjustBet(by: 1)
                     }
                 }
 
-                seat(Cab.spin, fit, ox, oy) { spinButton }
+                seat(spec.spin, fit, ox, oy) { spinButton(fit: fit) }
             }
         }
         .clipped()
     }
 
-    /// The 3D viewport is deliberately shorter than the window, so only three full
-    /// rows plus slivers show. The leftover band is `reelVoid`, reading as the dark
+    /// The 3D viewport is never taller than the window; when the window is taller
+    /// than the bank needs, the leftover band is `reelVoid`, reading as the dark
     /// interior of the machine.
     private func viewportHeight(fit: CGSize) -> CGFloat {
-        let w = fit.width * Cab.Window.w
-        let aspect = Double(game.mode.reels) / Cab.Window.visibleRows
-        // Never taller than the window itself — on three reels the bank is narrower
-        // than it is tall, so the height cap is what binds.
-        return min(w / aspect, fit.height * Cab.Window.h)
+        let w = fit.width * spec.winW
+        let aspect = Double(game.mode.reels) / Cab.visibleRows
+        return min(w / aspect, fit.height * spec.winH)
     }
 
     /// Wants the full artwork visible, so this is a plain aspect fit. Drawing it
     /// wider than the screen would enlarge the symbols, but it slices the lions —
     /// they begin only 45px in from the artwork's edge.
     private func cabinetSize(in container: CGSize) -> CGSize {
-        let width = min(container.width, container.height * Cab.aspect)
-        return CGSize(width: width, height: width / Cab.aspect)
+        let width = min(container.width, container.height * spec.aspect)
+        return CGSize(width: width, height: width / spec.aspect)
     }
 
     /// Seat a control at a slot's normalised centre within the fitted artwork.
@@ -396,8 +421,40 @@ struct MachineView: View {
         .animation(.easeOut(duration: 0.15), value: enabled)
     }
 
-    private var spinButton: some View {
-        Button(action: spin) {
+    /// The bet readout, sized to the well the current artwork provides. The wells
+    /// differ per cabinet (the three-reel readout is a short 50px letterbox, the
+    /// five-reel a tall 118px frame), so the type scales from the seat, not from
+    /// constants.
+    private func betReadout(fit: CGSize) -> some View {
+        let slotH = fit.height * spec.readout.h
+        return VStack(spacing: -1) {
+            // In a short well the label steals height the number needs.
+            if slotH >= 30 {
+                Text("BET")
+                    .font(.system(size: max(7, slotH * 0.19), weight: .black, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .tracking(1.5)
+            }
+            Text(game.totalBet.formatted())
+                .font(.system(size: slotH * (slotH >= 30 ? 0.54 : 0.68),
+                              weight: .heavy, design: .serif))
+                .foregroundStyle(goldGradient)
+                .monospacedDigit()
+                .minimumScaleFactor(0.4)
+                .lineLimit(1)
+                .contentTransition(.numericText())
+        }
+        .shadow(color: .black.opacity(0.8), radius: 2, y: 1)
+    }
+
+    private func spinButton(fit: CGSize) -> some View {
+        // Width binds: SPIN in black serif measures ~2.7× its point size, and it
+        // should sit clear of the gold ring — 0.26 × the well width reproduces the
+        // hand-tuned 21pt on the original 82pt well and scales to smaller ones.
+        let slotW = fit.width * spec.spin.w
+        let slotH = fit.height * spec.spin.h
+        let fontSize = min(slotH * 0.45, slotW * 0.26)
+        return Button(action: spin) {
             // Just the word. The cabinet artwork already draws the round button well
             // — purple face, gold ring, the lot — so drawing another circle on top
             // only ever put a second button inside the first one. The text sits in
@@ -406,11 +463,8 @@ struct MachineView: View {
             ZStack {
                 Color.white.opacity(0.001)
 
-                // 21pt, not 26. The opening is ~77pt across and SPIN set at 26pt
-                // measures ~71pt, so it crowded the gold ring on both sides. This
-                // leaves it sitting clear inside the well.
                 Text(game.spinButtonLabel)
-                    .font(.system(size: 21, weight: .black, design: .serif))
+                    .font(.system(size: fontSize, weight: .black, design: .serif))
                     .tracking(0.5)
                     .foregroundStyle(game.canSpin
                                      ? AnyShapeStyle(goldGradient)

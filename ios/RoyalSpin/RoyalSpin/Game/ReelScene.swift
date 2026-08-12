@@ -43,9 +43,13 @@ enum ReelTuning {
     /// Angular size of one symbol cell.
     static var cellAngle: Double { 2 * .pi / Double(panelCount) }
 
-    /// Aspect of the cabinet's reel window (702 × 569 in the artwork). The camera
-    /// needs it to decide which axis is the binding constraint.
-    static let windowAspect: Double = 702.0 / 569.0
+    /// Aspect of the cabinet's reel window, per machine — each mode has its own
+    /// cabinet artwork now. The camera needs it to decide which axis is the binding
+    /// constraint. Measured in one place, `Cab`, so this can never drift from the
+    /// rect the SwiftUI layer cuts the viewport to.
+    static func windowAspect(for mode: ReelMode) -> Double {
+        Cab.spec(for: mode).windowAspect
+    }
 
     /// Apparent vertical extent of exactly three rows, in front-plane units.
     ///
@@ -141,6 +145,12 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
     }
 
     /// Swap machines. Safe to call at any time; a spin in flight is abandoned.
+    ///
+    /// The camera node is deliberately NOT torn down here. `SCNView` latches onto
+    /// the scene's first camera as its `pointOfView` and keeps rendering through
+    /// that node even after it is removed from the scene — replacing the node left
+    /// the view framing the new bank through the old machine's camera. `buildScene`
+    /// reconfigures the surviving node in place instead.
     func rebuild(for newMode: ReelMode) {
         guard newMode != mode else { return }
         mode = newMode
@@ -148,8 +158,6 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
         pendingResult = nil
         for reel in reels { reel.node.removeFromParentNode() }
         reels.removeAll()
-        cameraNode?.removeFromParentNode()
-        cameraNode = nil
         buildScene()
     }
 
@@ -158,9 +166,25 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
     // MARK: Scene construction
 
     private func buildScene() {
-        scene.background.contents = UIColor(red: 0.05, green: 0.02, blue: 0.09, alpha: 1)
+        // Exactly Cab.reelVoid. The viewport can sit inside a larger reelVoid
+        // rectangle, and any mismatch shows as two different darks in the window.
+        scene.background.contents = UIColor(red: 0x15 / 255.0, green: 0x0A / 255.0,
+                                            blue: 0x2E / 255.0, alpha: 1)
 
-        let camera = SCNCamera()
+        // One camera node for the life of the scene — see `rebuild(for:)` for why
+        // it must be reconfigured in place rather than replaced.
+        let camera: SCNCamera
+        let camNode: SCNNode
+        if let existing = cameraNode, let existingCamera = existing.camera {
+            camNode = existing
+            camera = existingCamera
+        } else {
+            camera = SCNCamera()
+            camNode = SCNNode()
+            camNode.camera = camera
+            scene.rootNode.addChildNode(camNode)
+            cameraNode = camNode
+        }
         // Fit by whichever axis actually binds.
         //
         // Five reels are wider than they are tall (5.0 / 3.25 = 1.54 against the
@@ -172,7 +196,7 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
         let bank = Double(mode.reels) * Double(ReelTuning.reelSpacing)
         let visibleRows = ReelTuning.visibleRows
         camera.projectionDirection =
-            bank / visibleRows >= ReelTuning.windowAspect ? .horizontal : .vertical
+            bank / visibleRows >= ReelTuning.windowAspect(for: mode) ? .horizontal : .vertical
         camera.fieldOfView = 42
         camera.zNear = 0.1
         camera.zFar = 100
@@ -182,17 +206,13 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
         camera.bloomBlurRadius = 12
         camera.wantsHDR = true
 
-        let cameraNode = SCNNode()
-        self.cameraNode = cameraNode
-        cameraNode.camera = camera
         // Distance is derived, not eyeballed: to frame an extent E across a FOV θ at
         // the plane of the front faces, the camera sits at E / (2·tan(θ/2)) beyond
         // that plane — which is itself `radius` in front of the reel axis.
         let halfFOV = (camera.fieldOfView * .pi / 180) / 2
         let extent = camera.projectionDirection == .horizontal ? bank : visibleRows
         let distance = extent / (2 * tan(halfFOV)) + Double(ReelTuning.radius)
-        cameraNode.position = SCNVector3(0, 0, CGFloat(distance))
-        scene.rootNode.addChildNode(cameraNode)
+        camNode.position = SCNVector3(0, 0, CGFloat(distance))
 
         // No lights: every material is `.constant`, so lights would be ignored
         // anyway. Dropping them also drops the shadow pass, which was the most

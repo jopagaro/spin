@@ -34,9 +34,9 @@ struct SettingsSheet: View {
                     Text("Volatility")
                 } footer: {
                     Text("Return-to-player and hit frequency are separate settings. "
-                         + "Royal Ruin returns the same percentage as Classic but pays "
-                         + "less than half as often — the same money arrives in rarer, "
-                         + "much larger wins.")
+                         + "High Stakes returns nearly the same percentage as Balanced "
+                         + "but pays less than half as often — the same money arrives "
+                         + "in rarer, much larger wins.")
                 }
 
                 Section {
@@ -83,21 +83,17 @@ struct SettingsSheet: View {
         }
     }
 
-    // Figures from design/math.md, measured over 5M simulated spins per profile.
+    // From the same measured table the lobby uses (MachineStats, simulator output)
+    // so the figures track both the machine and the difficulty. The previous
+    // version hard-coded one machine's numbers and showed them for every cabinet.
+    private var stats: MachineStats { MachineStats.of(game.mode, game.volatility) }
+
     private var rtp: String {
-        switch game.volatility {
-        case .gentle:  return "94.85%"
-        case .classic: return "89.86%"
-        case .brutal:  return "89.86%"
-        }
+        String(format: "%.2f%%", stats.rtp)
     }
 
     private var hitRate: String {
-        switch game.volatility {
-        case .gentle:  return "1 spin in 2.8"
-        case .classic: return "1 spin in 4.7"
-        case .brutal:  return "1 spin in 11.4"
-        }
+        "1 spin in \(String(format: "%.1f", stats.winsOneIn))"
     }
 }
 

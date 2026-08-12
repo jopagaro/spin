@@ -264,55 +264,28 @@ private struct MachineCard: View {
         }
     }
 
-    /// Leads with the prize.
+    /// Leads with the prize — and only the prize.
     ///
-    /// Top win is the number that sells a machine, so it gets the space and the gold.
-    /// Return-to-player has moved to the paytable sheet — still one tap away, which
-    /// matters for an app that sells currency, but not competing for attention with
-    /// the reason someone would actually pick this cabinet.
+    /// Top win is the number that sells a machine, so it gets the space and the
+    /// gold. The odds (hit rate, bonus frequency, return-to-player) live in the
+    /// paytable sheet — one tap away and referenced by the footnote below, but not
+    /// printed on the sales floor.
     private var stat_row: some View {
-        HStack(spacing: 0) {
-            VStack(spacing: 2) {
-                Text("TOP WIN")
-                    .font(.system(size: 8, weight: .black, design: .rounded))
-                    .tracking(1)
-                    .foregroundStyle(.white.opacity(0.45))
-                Text("\(stats.maxWinMultiple)×")
-                    .font(.system(size: 26, weight: .black, design: .serif))
-                    .foregroundStyle(LobbyStyle.gold)
-                    .monospacedDigit()
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity)
-
-            divider
-            statCell("WINS", "1 in \(String(format: "%.1f", stats.winsOneIn))")
-            divider
-            statCell("BONUS", "1 in \(stats.bonusOneIn)")
-        }
-        .padding(.vertical, 10)
-        .background(RoundedRectangle(cornerRadius: 12).fill(.black.opacity(0.30)))
-    }
-
-    private var divider: some View {
-        Rectangle().fill(.white.opacity(0.10)).frame(width: 1, height: 26)
-    }
-
-    private func statCell(_ label: String, _ value: String) -> some View {
         VStack(spacing: 2) {
-            Text(label)
+            Text("TOP WIN")
                 .font(.system(size: 8, weight: .black, design: .rounded))
                 .tracking(1)
-                .foregroundStyle(.white.opacity(0.4))
-            Text(value)
-                .font(.system(size: 14, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(.white.opacity(0.45))
+            Text("\(stats.maxWinMultiple)×")
+                .font(.system(size: 26, weight: .black, design: .serif))
+                .foregroundStyle(LobbyStyle.gold)
                 .monospacedDigit()
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(RoundedRectangle(cornerRadius: 12).fill(.black.opacity(0.30)))
     }
 }
 

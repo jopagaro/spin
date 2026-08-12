@@ -29,11 +29,11 @@ enum ReelTuning {
     /// through the gap between symbols; few enough to stay cheap. 5 reels × 14 = 70 nodes.
     static let panelCount = 14
 
-    /// Panels are exactly one unit square and sit exactly one unit apart, so five
-    /// reels span exactly 5.0 units. The camera is then framed to that width, which
-    /// is what makes the bank fill the cabinet window edge to edge.
+    /// Panels are exactly one unit square. At the snug minimum the reels also sit
+    /// one unit apart, so five reels span exactly 5.0 units; when the cabinet
+    /// window is slightly wider than that, `Cab.reelSpacing` stretches the spacing
+    /// (never past 10%) so the bank still fills the window edge to edge.
     static let panelSize: CGFloat = 1.0
-    static let reelSpacing: CGFloat = 1.0
 
     /// Vertical spacing between adjacent panels at the front of the cylinder is
     /// R·sin(Δ). For rows not to overlap that has to be at least `panelSize`, so
@@ -43,13 +43,9 @@ enum ReelTuning {
     /// Angular size of one symbol cell.
     static var cellAngle: Double { 2 * .pi / Double(panelCount) }
 
-    /// Aspect of the cabinet's reel window, per machine — each mode has its own
-    /// cabinet artwork now. The camera needs it to decide which axis is the binding
-    /// constraint. Measured in one place, `Cab`, so this can never drift from the
-    /// rect the SwiftUI layer cuts the viewport to.
-    static func windowAspect(for mode: ReelMode) -> Double {
-        Cab.spec(for: mode).windowAspect
-    }
+    // The window aspect the camera frames against is not a constant here: it comes
+    // from whichever cabinet artwork is on screen (per machine, per orientation)
+    // and is handed to the scene via `frame(mode:windowAspect:)`.
 
     /// Apparent vertical extent of exactly three rows, in front-plane units.
     ///
@@ -134,26 +130,32 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
 
     /// Which machine is on screen. Changing it tears down and rebuilds the reel
     /// bank, because the number of cylinders and the camera framing both depend on
-    /// it — see `rebuild(for:)`.
+    /// it — see `frame(mode:windowAspect:)`.
     private(set) var mode: ReelMode
+    /// Aspect of the reel window in the cabinet artwork currently on screen —
+    /// per machine and per orientation. Drives the camera and the reel spacing.
+    private(set) var windowAspect: Double
 
     init(mode: ReelMode = .three) {
         self.mode = mode
-        
+        self.windowAspect = Cab.spec(for: mode).windowAspect
+
         super.init()
         buildScene()
     }
 
-    /// Swap machines. Safe to call at any time; a spin in flight is abandoned.
+    /// Point the scene at a machine and a cabinet window. Safe to call at any
+    /// time; a spin in flight is abandoned. No-op when nothing changed.
     ///
     /// The camera node is deliberately NOT torn down here. `SCNView` latches onto
     /// the scene's first camera as its `pointOfView` and keeps rendering through
     /// that node even after it is removed from the scene — replacing the node left
     /// the view framing the new bank through the old machine's camera. `buildScene`
     /// reconfigures the surviving node in place instead.
-    func rebuild(for newMode: ReelMode) {
-        guard newMode != mode else { return }
+    func frame(mode newMode: ReelMode, windowAspect newAspect: Double) {
+        guard newMode != mode || abs(newAspect - windowAspect) > 0.0001 else { return }
         mode = newMode
+        windowAspect = newAspect
         isSpinning = false
         pendingResult = nil
         for reel in reels { reel.node.removeFromParentNode() }
@@ -193,10 +195,15 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
         // past the height of the glass and crop the top and bottom rows. Picking the
         // binding axis makes both machines fill the window correctly with no
         // per-mode fudge factors.
-        let bank = Double(mode.reels) * Double(ReelTuning.reelSpacing)
+        // Reel spacing stretches (never squeezes, capped at 10%) so the bank
+        // exactly fills a window slightly wider than snug reels — see
+        // Cab.reelSpacing. Panels are one unit square, so the bank spans
+        // (n−1)·spacing + 1.
+        let spacing = Cab.reelSpacing(for: mode, windowAspect: windowAspect)
+        let bank = Double(mode.reels - 1) * spacing + Double(ReelTuning.panelSize)
         let visibleRows = ReelTuning.visibleRows
         camera.projectionDirection =
-            bank / visibleRows >= ReelTuning.windowAspect(for: mode) ? .horizontal : .vertical
+            bank / visibleRows >= windowAspect ? .horizontal : .vertical
         camera.fieldOfView = 42
         camera.zNear = 0.1
         camera.zFar = 100
@@ -219,11 +226,11 @@ final class ReelScene: NSObject, SCNSceneRendererDelegate {
         // expensive thing in the scene and contributed nothing.
 
         // Reels.
-        let totalWidth = CGFloat(mode.reels - 1) * ReelTuning.reelSpacing
+        let totalWidth = CGFloat(mode.reels - 1) * CGFloat(spacing)
         for i in 0 ..< mode.reels {
             let reel = buildReel(index: i)
             reel.node.position = SCNVector3(
-                CGFloat(i) * ReelTuning.reelSpacing - totalWidth / 2, 0, 0
+                CGFloat(i) * CGFloat(spacing) - totalWidth / 2, 0, 0
             )
             scene.rootNode.addChildNode(reel.node)
             reels.append(reel)

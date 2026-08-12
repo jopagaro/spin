@@ -113,6 +113,8 @@ def main():
         "cabinet_frame":  [(2, 1024), (3, 1024)],
         "cabinet_three":  [(2, 1024), (3, 1024)],
         "cabinet_five":   [(2, 1024), (3, 1024)],
+        # Landscape master is 1536 wide; needs the pixels for full-width landscape.
+        "cabinet_five_land": [(2, 1536), (3, 1536)],
         "bg_throne_room": [(2, 1024), (3, 1024)],
         "lever_knob":     [(1, 64), (2, 128), (3, 192)],
         "lever_shaft":    [(1, 24), (2, 48), (3, 72)],
@@ -125,6 +127,7 @@ def main():
         "cabinet_frame":  [("xhdpi", 720), ("xxhdpi", 1024), ("xxxhdpi", 1024)],
         "cabinet_three":  [("xhdpi", 720), ("xxhdpi", 1024), ("xxxhdpi", 1024)],
         "cabinet_five":   [("xhdpi", 720), ("xxhdpi", 1024), ("xxxhdpi", 1024)],
+        "cabinet_five_land": [("xhdpi", 1080), ("xxhdpi", 1536), ("xxxhdpi", 1536)],
         "bg_throne_room": [("xhdpi", 720), ("xxhdpi", 1024), ("xxxhdpi", 1024)],
         "lever_knob":     [("mdpi", 48), ("hdpi", 72), ("xhdpi", 96), ("xxhdpi", 144), ("xxxhdpi", 192)],
         "lever_shaft":    [("mdpi", 18), ("hdpi", 27), ("xhdpi", 36), ("xxhdpi", 54), ("xxxhdpi", 72)],

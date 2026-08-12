@@ -81,6 +81,33 @@ enum Cab {
 
     static func spec(for mode: ReelMode) -> Spec { mode == .three ? three : five }
 
+    /// Orientation-aware variant. Only Empire has landscape artwork; Kingdom in
+    /// landscape keeps its portrait cabinet, aspect-fit and pillarboxed.
+    static func spec(for mode: ReelMode, landscape: Bool) -> Spec {
+        landscape && mode == .five ? fiveLandscape : spec(for: mode)
+    }
+
+    /// How far apart to place reel centres (panel widths) for a given window.
+    ///
+    /// When the window is slightly wider than a snug bank, the reels are spread —
+    /// never squeezed — so the bank fills it exactly: thin dark seams between reels
+    /// read as the machine's reel dividers, where flanking void bands read as a
+    /// mistake. Capped at 10% so artwork that is badly off shows honest bands
+    /// rather than gap-toothed reels.
+    static func reelSpacing(for mode: ReelMode, windowAspect: Double) -> Double {
+        guard mode.reels > 1 else { return 1 }
+        let targetWidth = windowAspect * visibleRows
+        let spacing = (targetWidth - 1) / Double(mode.reels - 1)
+        return min(max(spacing, 1), 1.10)
+    }
+
+    /// Width:height of the reel bank at that spacing — the aspect the camera
+    /// actually frames. Panels are one unit square, so the bank is (n−1)·s + 1 wide.
+    static func bankAspect(for mode: ReelMode, windowAspect: Double) -> Double {
+        let spacing = reelSpacing(for: mode, windowAspect: windowAspect)
+        return (Double(mode.reels - 1) * spacing + 1) / visibleRows
+    }
+
     /// `cabinet_three.png` — measured off the master. Window opening 520 × 507
     /// (x 252–771, y 514–1020), aspect 1.026 against the 3×3 bank's ideal 1.086:
     /// the residual is a ~14px band top and bottom, filled with `reelVoid`.
@@ -115,6 +142,25 @@ enum Cab {
         readout: Slot(cx: 419.5 / 1024, cy: 1274.0 / 1536, w: 148 / 1024, h:  46 / 1536),
         betUp:   Slot(cx: 587.5 / 1024, cy: 1273.5 / 1536, w:  72 / 1024, h:  52 / 1536),
         spin:    Slot(cx: 748.5 / 1024, cy: 1276.0 / 1536, w: 114 / 1024, h:  76 / 1536)
+    )
+
+    /// `cabinet_five_land.png` — the landscape cabinet: shallow marquee, window
+    /// on the left, control deck stacked down the right. Window opening 1066 × 555
+    /// (x 69–1134, y 196–750), aspect 1.921 — the ~6% beyond the bank's 1.811 is
+    /// absorbed by `reelSpacing` stretching the reels into it.
+    ///
+    ///   betDown  opening  98 x  96 centred (1331.5,  257.5)
+    ///   readout  opening 203 x  70 centred (1331.0,  375.5)
+    ///   betUp    opening  96 x  91 centred (1331.5,  487.0)
+    ///   spin     opening 176 x 171 centred (1331.5,  648.0)
+    static let fiveLandscape = Spec(
+        imageName: "cabinet_five_land",
+        imageW: 1536, imageH: 864,
+        winPx: (x0: 69, x1: 1134, y0: 196, y1: 750),
+        betDown: Slot(cx: 1331.5 / 1536, cy: 257.5 / 864, w:  90 / 1536, h:  88 / 864),
+        readout: Slot(cx: 1331.0 / 1536, cy: 375.5 / 864, w: 194 / 1536, h:  64 / 864),
+        betUp:   Slot(cx: 1331.5 / 1536, cy: 487.0 / 864, w:  88 / 1536, h:  84 / 864),
+        spin:    Slot(cx: 1331.5 / 1536, cy: 648.0 / 864, w: 164 / 1536, h: 160 / 864)
     )
 }
 
@@ -177,6 +223,8 @@ struct MachineView: View {
     @State private var showStore = false
     @State private var winFlash = false
     @State private var spinPressed = false
+    /// Tracked off the cabinet container's geometry; picks the cabinet artwork.
+    @State private var isLandscape = false
 
     var body: some View {
         ZStack {
@@ -191,11 +239,11 @@ struct MachineView: View {
             overlays
         }
         .preferredColorScheme(.dark)
-        .onAppear {
-            wireScene()
-            scene.rebuild(for: game.mode)
+        .onAppear { wireScene() }
+        .onChange(of: game.mode) { _, newMode in
+            scene.frame(mode: newMode,
+                        windowAspect: Cab.spec(for: newMode, landscape: isLandscape).windowAspect)
         }
-        .onChange(of: game.mode) { _, newMode in scene.rebuild(for: newMode) }
         .sheet(isPresented: $showSettings) { SettingsSheet(game: game) }
         .sheet(isPresented: $showPaytable) {
             PaytableSheet(volatility: game.volatility, mode: game.mode)
@@ -302,7 +350,17 @@ struct MachineView: View {
     // MARK: Cabinet
 
     /// Geometry of whichever cabinet artwork is on screen.
-    private var spec: Cab.Spec { Cab.spec(for: game.mode) }
+    private var spec: Cab.Spec { Cab.spec(for: game.mode, landscape: isLandscape) }
+
+    /// Keep the artwork choice and the scene's camera in step with the container's
+    /// orientation. Runs on the cabinet's geometry, not the device orientation —
+    /// what matters is the shape of the space the cabinet actually has.
+    private func syncOrientation(_ size: CGSize) {
+        let landscape = size.width > size.height
+        if landscape != isLandscape { isLandscape = landscape }
+        scene.frame(mode: game.mode,
+                    windowAspect: Cab.spec(for: game.mode, landscape: landscape).windowAspect)
+    }
 
     private var cabinet: some View {
         GeometryReader { geo in
@@ -362,6 +420,8 @@ struct MachineView: View {
 
                 seat(spec.spin, fit, ox, oy) { spinButton(fit: fit) }
             }
+            .onAppear { syncOrientation(geo.size) }
+            .onChange(of: geo.size) { _, newSize in syncOrientation(newSize) }
         }
         .clipped()
     }
@@ -371,7 +431,9 @@ struct MachineView: View {
     /// interior of the machine.
     private func viewportHeight(fit: CGSize) -> CGFloat {
         let w = fit.width * spec.winW
-        let aspect = Double(game.mode.reels) / Cab.visibleRows
+        // Same stretched bank the scene frames — when the spacing stretch absorbs
+        // the whole difference this is exactly the window's own aspect.
+        let aspect = Cab.bankAspect(for: game.mode, windowAspect: spec.windowAspect)
         return min(w / aspect, fit.height * spec.winH)
     }
 

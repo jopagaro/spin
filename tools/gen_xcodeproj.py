@@ -287,7 +287,7 @@ def main():
 \t\t\t\tINFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 \t\t\t\tINFOPLIST_KEY_UILaunchScreen_Generation = YES;
 \t\t\t\tINFOPLIST_KEY_UIStatusBarHidden = YES;
-\t\t\t\tINFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+\t\t\t\tINFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 \t\t\t\tLD_RUNPATH_SEARCH_PATHS = (
 \t\t\t\t\t"$(inherited)",
 \t\t\t\t\t"@executable_path/Frameworks",

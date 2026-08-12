@@ -99,23 +99,22 @@ enum Cab {
         spin:    Slot(cx: 753.5 / 1024, cy: 1142.5 / 1536, w: 116 / 1024, h:  96 / 1536)
     )
 
-    /// `cabinet_frame.png` — the original cabinet, still used by the five-reel
-    /// machine until its letterbox variant is regenerated (the first attempt came
-    /// out 2.94:1 against the needed 1.81:1). Window 702 × 568 (x 159–860,
-    /// y 465–1033).
+    /// `cabinet_five.png` — the letterbox cabinet. Window opening 665 × 355
+    /// (x 177–841, y 709–1063), aspect 1.873 against the 5×3 bank's ideal 1.811:
+    /// the residual is a ~11px band each side, filled with `reelVoid`.
     ///
-    ///   betDown  opening 154 x 161 centred (193.4, 1200.5)
-    ///   readout  opening 157 x 123 centred (380.2, 1199.4)
-    ///   betUp    opening 154 x 167 centred (564.2, 1200.9)
-    ///   spin     opening 234 x 236 centred (813.8, 1205.1)
+    ///   betDown  opening  78 x  58 centred (249.5, 1272.5)
+    ///   readout  opening 156 x  51 centred (419.5, 1274.0)
+    ///   betUp    opening  78 x  58 centred (587.5, 1273.5)
+    ///   spin     opening 124 x  83 centred (748.5, 1276.0)
     static let five = Spec(
-        imageName: "cabinet_frame",
+        imageName: "cabinet_five",
         imageW: 1024, imageH: 1536,
-        winPx: (x0: 159, x1: 860, y0: 465, y1: 1033),
-        betDown: Slot(cx: 193.4 / 1024, cy: 1200.5 / 1536, w: 148 / 1024, h: 155 / 1536),
-        readout: Slot(cx: 380.2 / 1024, cy: 1199.4 / 1536, w: 150 / 1024, h: 118 / 1536),
-        betUp:   Slot(cx: 564.2 / 1024, cy: 1200.9 / 1536, w: 148 / 1024, h: 160 / 1536),
-        spin:    Slot(cx: 813.8 / 1024, cy: 1205.1 / 1536, w: 210 / 1024, h: 210 / 1536)
+        winPx: (x0: 177, x1: 841, y0: 709, y1: 1063),
+        betDown: Slot(cx: 249.5 / 1024, cy: 1272.5 / 1536, w:  72 / 1024, h:  52 / 1536),
+        readout: Slot(cx: 419.5 / 1024, cy: 1274.0 / 1536, w: 148 / 1024, h:  46 / 1536),
+        betUp:   Slot(cx: 587.5 / 1024, cy: 1273.5 / 1536, w:  72 / 1024, h:  52 / 1536),
+        spin:    Slot(cx: 748.5 / 1024, cy: 1276.0 / 1536, w: 114 / 1024, h:  76 / 1536)
     )
 }
 

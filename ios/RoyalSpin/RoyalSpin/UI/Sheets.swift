@@ -16,27 +16,23 @@ struct SettingsSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                // Read-only. Each machine's difficulty is part of its identity —
+                // Kingdom is the steady one, Empire the high-stakes one — so the
+                // lobby is where you choose it, by choosing a machine.
                 Section {
-                    Picker("Difficulty", selection: $game.volatility) {
-                        ForEach(Volatility.allCases, id: \.self) { v in
-                            Text(v.displayName).tag(v)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-
+                    LabeledContent("Difficulty", value: game.volatility.displayName)
                     Text(game.volatility.blurb)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-
                     LabeledContent("Measured RTP", value: rtp)
                     LabeledContent("Wins on", value: hitRate)
                 } header: {
-                    Text("Volatility")
+                    Text("This machine")
                 } footer: {
-                    Text("Return-to-player and hit frequency are separate settings. "
-                         + "High Stakes returns nearly the same percentage as Balanced "
-                         + "but pays less than half as often — the same money arrives "
-                         + "in rarer, much larger wins.")
+                    Text("Every machine's difficulty is fixed — pick the machine that "
+                         + "matches your mood in the lobby. Return-to-player and hit "
+                         + "frequency are measured over millions of simulated spins; "
+                         + "full pays are in the paytable.")
                 }
 
                 Section {

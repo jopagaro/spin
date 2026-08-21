@@ -102,6 +102,27 @@ public enum Rank {
 
     public static var maxLevel: Int { titles.count }
 
+    /// Artwork is being produced a band at a time. Keeping this list explicit
+    /// makes a missing image fall back cleanly instead of asking SwiftUI for an
+    /// asset that does not exist.
+    public static let illustratedAssetNames: [String] = [
+        "rank_01_peasant",
+        "rank_02_grunt",
+        "rank_03_serf",
+        "rank_04_mud_farmer",
+        "rank_05_pot_scrubber",
+        "rank_06_stable_hand",
+        "rank_07_goose_herd",
+        "rank_08_rookie",
+        "rank_09_turnip_knight",
+        "rank_10_apprentice",
+    ]
+
+    public static func illustratedAssetName(for level: Int) -> String? {
+        guard illustratedAssetNames.indices.contains(level - 1) else { return nil }
+        return illustratedAssetNames[level - 1]
+    }
+
     public static func title(for level: Int) -> String {
         titles[min(max(level, 1), maxLevel) - 1]
     }

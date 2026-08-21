@@ -42,6 +42,36 @@ extension Rank.Band {
 
 // MARK: - Rank badge + XP bar
 
+/// The generated portrait when one exists, with the numbered metal chip as the
+/// fallback while later sections of the rank ladder are still being illustrated.
+struct RankMedallion: View {
+    let level: Int
+    let band: Rank.Band
+    var size: CGFloat
+
+    var body: some View {
+        Group {
+            if let assetName = Rank.illustratedAssetName(for: level) {
+                Image(assetName)
+                    .resizable()
+                    .scaledToFill()
+                    .clipShape(Circle())
+                    .overlay(Circle().strokeBorder(band.tint, lineWidth: max(1, size * 0.035)))
+                    .shadow(color: .black.opacity(0.55), radius: size * 0.08, y: size * 0.04)
+            } else {
+                Text("\(level)")
+                    .font(.system(size: size * 0.45, weight: .black, design: .rounded))
+                    .foregroundStyle(.black.opacity(0.8))
+                    .frame(width: size, height: size)
+                    .background(Circle().fill(band.tint))
+                    .overlay(Circle().strokeBorder(.black.opacity(0.25), lineWidth: 1))
+            }
+        }
+        .frame(width: size, height: size)
+        .accessibilityLabel("Level \(level), \(Rank.title(for: level))")
+    }
+}
+
 /// Compact rank readout: level chip, title, and the bar to the next rung.
 struct RankBar: View {
     let progress: RankProgress
@@ -49,12 +79,9 @@ struct RankBar: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Text("\(progress.level)")
-                .font(.system(size: compact ? 12 : 14, weight: .black, design: .rounded))
-                .foregroundStyle(.black.opacity(0.8))
-                .frame(width: compact ? 24 : 28, height: compact ? 24 : 28)
-                .background(Circle().fill(progress.band.tint))
-                .overlay(Circle().strokeBorder(.black.opacity(0.25), lineWidth: 1))
+            RankMedallion(level: progress.level,
+                          band: progress.band,
+                          size: compact ? 38 : 46)
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
@@ -110,6 +137,10 @@ struct LevelUpBanner: View {
                     .font(.system(size: 12, weight: .black, design: .rounded))
                     .tracking(3)
                     .foregroundStyle(.white.opacity(0.55))
+
+                RankMedallion(level: event.level,
+                              band: Rank.band(for: event.level),
+                              size: 132)
 
                 Text(event.title)
                     .font(.system(size: 40, weight: .black, design: .serif))

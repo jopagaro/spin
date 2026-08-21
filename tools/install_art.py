@@ -6,6 +6,7 @@ install_art.py — slice the artwork in assets/ into both app projects.
 
 Reads:
     assets/symbols/masters/<name>.png     1254px symbol masters
+    assets/ranks/masters/<level>_<name>.png  1254px rank badge masters
     art/masters/scene/<name>.png          cabinet frame, backdrop, lever parts
 
 Writes:
@@ -22,6 +23,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 XCASSETS = os.path.join(ROOT, "ios", "RoyalSpin", "RoyalSpin", "Assets.xcassets")
@@ -40,11 +42,30 @@ ANDROID_DENSITIES = [("mdpi", 96), ("hdpi", 144), ("xhdpi", 192),
                      ("xxhdpi", 288), ("xxxhdpi", 384)]
 IOS_SCALES = [(1, 128), (2, 256), (3, 384)]
 
+RANKS = [
+    "01_peasant", "02_grunt", "03_serf", "04_mud_farmer", "05_pot_scrubber",
+    "06_stable_hand", "07_goose_herd", "08_rookie", "09_turnip_knight",
+    "10_apprentice",
+]
+
 
 def resize(src, width, dst):
     os.makedirs(os.path.dirname(dst), exist_ok=True)
-    subprocess.run(["sips", "--resampleWidth", str(width), src, "--out", dst],
-                   check=True, capture_output=True)
+    # `sips --out existing.png` silently invents "existing 2.png" instead of
+    # replacing the file. Render to a unique sibling and replace atomically so
+    # repeated installs are idempotent and never litter asset catalogs.
+    handle, temporary = tempfile.mkstemp(dir=os.path.dirname(dst), suffix=".png")
+    os.close(handle)
+    try:
+        subprocess.run(
+            ["sips", "--resampleWidth", str(width), src, "--out", temporary],
+            check=True,
+            capture_output=True,
+        )
+        os.replace(temporary, dst)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
 
 def imageset(name, src, scales):
@@ -158,6 +179,18 @@ def main():
 
     if missing:
         print(f"\n  {len(missing)} symbol(s) missing: {', '.join(missing)}")
+
+    print("\n  ranks")
+    rank_dir = os.path.join(ROOT, "assets", "ranks", "masters")
+    for rank in RANKS:
+        src = os.path.join(rank_dir, f"{rank}.png")
+        if not os.path.exists(src):
+            print(f"    · {rank:<20} not present")
+            continue
+        name = f"rank_{rank}"
+        imageset(name, src, IOS_SCALES)
+        android(name, src, ANDROID_DENSITIES)
+        print(f"    ✓ {name}")
     print()
 
 

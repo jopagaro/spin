@@ -5,18 +5,13 @@
 //  Ranks, XP and the free-credit timer.
 //
 //  This exists to solve the one structural problem a slot machine has: it doesn't
-//  progress. Spin, result, spin — every session identical to the last, and on the
-//  high-stakes machine 91% of spins return nothing whatsoever. A player who loses
-//  ten in a row has been given nothing at all for their time.
+//  progress. Spin, result, spin — every session otherwise starts to feel identical.
 //
-//  XP fixes that, but only if it comes from the right number. **XP is earned on
-//  credits wagered, never on credits won.** Tying it to winnings would race the
-//  lucky player up the ladder while the unlucky one stalls — precisely backwards,
-//  because the unlucky player is the one about to close the app. Staking is
-//  something the player always does; winning is something that happens to them.
-//
-//  Free spins and bonus spins earn no XP, since nothing was staked. That also stops
-//  the bonus loop from being farmed for levels.
+//  **One credit won is one XP.** A loss does not move the bar, a small win nudges it,
+//  and a jackpot can clear several ranks at once. That makes rank progress part of
+//  the win celebration instead of a participation counter attached to every spin.
+//  Free and guaranteed-spin payouts count as well: they are real wins in this
+//  no-cash economy, and both reward pools are finite rather than farmable loops.
 //
 
 import Foundation
@@ -146,13 +141,12 @@ public enum XPCurve {
     /// XP required to advance *from* `level` to `level + 1`.
     ///
     /// `40 · level^1.6`. The exponent is what shapes the whole experience: the first
-    /// rung costs 40 XP, which at the Kingdom's 5-credit minimum is eight spins, so a
-    /// new player is promoted almost immediately and learns the ladder exists. By
-    /// level 40 a rung costs ~15,000, which is a session's work.
+    /// rung costs 40 XP, so the first 40 credits a player wins teach them that the
+    /// ladder exists. By level 40 a rung costs ~15,000 credits won, which takes a
+    /// sustained run of play.
     ///
-    /// Total to reach Immortal is about 1.1M credits staked — roughly three months
-    /// of daily play at a few hundred spins a day, which is where this genre pitches
-    /// its ceiling.
+    /// Total to reach Immortal is about 1.1M credits won. Because wins arrive in
+    /// bursts, two players can reach the ceiling on very different timelines.
     public static func xpToAdvance(from level: Int) -> Int {
         guard level >= 1, level < Rank.maxLevel else { return 0 }
         return Int((40.0 * pow(Double(level), 1.6)).rounded())
@@ -202,11 +196,8 @@ extension ReelMode {
     /// the lobby a chooser rather than a destination; gating the high-stakes cabinet
     /// turns Kingdom from "the tamer one" into the road to somewhere, and gives the
     /// early ranks something to be for.
-    /// Level 5, not 8. At level 8 a player still on the opening 5-credit bet needs
-    /// 578 spins to see the second cabinet, which is most of a week — long enough
-    /// that they'd never learn the lobby leads anywhere. Level 5 is 152 spins at the
-    /// minimum, or about 15 for anyone who has raised their stake: reachable inside
-    /// a first good session, which is when an unlock still means something.
+    /// Level 5 requires 761 lifetime credits won: reachable in a strong first
+    /// session, while still making the second cabinet feel earned rather than given.
     public var unlockLevel: Int {
         switch self {
         case .three: return 1

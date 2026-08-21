@@ -84,7 +84,7 @@ final class GameViewModel: ObservableObject {
     // MARK: Internals
 
     private let machine: SlotMachine
-    /// Lifetime XP. Only staked spins contribute — see Progression.swift.
+    /// Lifetime XP. One point is earned for every credit won.
     private var totalXP: Int = 0
     private var countUpTask: Task<Void, Never>?
     private var bannerTask: Task<Void, Never>?
@@ -240,10 +240,6 @@ final class GameViewModel: ObservableObject {
         } else {
             credits -= totalBet
             displayCredits = credits
-            // XP is earned on what was staked, not on what came back, so a losing
-            // streak still advances the player. Free and bonus spins stake nothing
-            // and so earn nothing — which also stops the bonus loop being farmed.
-            awardXP(totalBet)
         }
 
         let result = machine.spin(betPerLine: betPerLine)
@@ -265,6 +261,10 @@ final class GameViewModel: ObservableObject {
 
         if result.totalWin > 0 {
             credits += result.totalWin
+            // Progress is a reward for winning, not merely for pressing SPIN. One
+            // credit won is one XP, so bigger hits move the rank bar farther and a
+            // losing result does not move it at all.
+            awardXP(result.totalWin)
             AudioEngine.shared.playWin(tier: result.tier)
             countUp(to: credits, tier: result.tier)
 
@@ -315,7 +315,6 @@ final class GameViewModel: ObservableObject {
             spins += XPCurve.bonusSpinReward(for: level)
         }
         credits += credited
-        displayCredits = credits
         if spins > 0 {
             machine.awardBonusSpins(spins)
             bonusSpins = machine.bonusSpinsRemaining

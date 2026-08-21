@@ -27,6 +27,22 @@ final class GameViewModel: ObservableObject {
     /// Guaranteed-win spins the player has banked, mirrored from the engine.
     @Published private(set) var bonusSpins: Int = 0
 
+    /// Rank and XP bar. Recomputed whenever lifetime XP changes.
+    @Published private(set) var progress: RankProgress = .from(totalXP: 0)
+    /// Set when a spin pushed the player up a rank, for the celebration banner.
+    @Published private(set) var levelUp: LevelUp?
+    /// When the timed collect was last taken. Nil means it has never been taken.
+    @Published private(set) var lastCollected: Date?
+
+    /// A rank promotion, with what it paid.
+    struct LevelUp: Equatable {
+        let level: Int
+        let title: String
+        let credits: Int
+        let bonusSpins: Int
+        let unlocked: ReelMode?
+    }
+
     @Published var volatility: Volatility { didSet { machine.volatility = volatility; save() } }
     @Published var isMuted = false { didSet { AudioEngine.shared.isMuted = isMuted; save() } }
     @Published var teaseEnabled = true {
@@ -75,6 +91,8 @@ final class GameViewModel: ObservableObject {
     // MARK: Internals
 
     private let machine: SlotMachine
+    /// Lifetime XP. Only staked spins contribute — see Progression.swift.
+    private var totalXP: Int = 0
     private var countUpTask: Task<Void, Never>?
     private var bannerTask: Task<Void, Never>?
 
@@ -90,6 +108,8 @@ final class GameViewModel: ObservableObject {
         static let muted = "rs.muted"
         static let tease = "rs.tease"
         static let freeSpins = "rs.freeSpins"
+        static let totalXP = "rs.totalXP"
+        static let lastCollected = "rs.lastCollected"
     }
 
     init() {
@@ -145,6 +165,10 @@ final class GameViewModel: ObservableObject {
         }
         machine.awardBonusSpins(banked)
         self.bonusSpins = machine.bonusSpinsRemaining
+
+        self.totalXP = d.object(forKey: Key.totalXP) as? Int ?? 0
+        self.progress = .from(totalXP: totalXP)
+        self.lastCollected = d.object(forKey: Key.lastCollected) as? Date
 
         AudioEngine.shared.isMuted = isMuted
     }
@@ -221,6 +245,10 @@ final class GameViewModel: ObservableObject {
         } else {
             credits -= totalBet
             displayCredits = credits
+            // XP is earned on what was staked, not on what came back, so a losing
+            // streak still advances the player. Free and bonus spins stake nothing
+            // and so earn nothing — which also stops the bonus loop being farmed.
+            awardXP(totalBet)
         }
 
         let result = machine.spin(betPerLine: betPerLine)
@@ -270,6 +298,66 @@ final class GameViewModel: ObservableObject {
         message = "\(result.freeSpinsAwarded) FREE SPINS + \(Self.bonusSpinsPerTrigger) GUARANTEED!"
         AudioEngine.shared.play(.freeSpins)
         return true
+    }
+
+    // MARK: Progression
+
+    /// Add XP and promote if the threshold is crossed.
+    ///
+    /// Handles multi-rank jumps: a single high-stakes spin early on can clear more
+    /// than one rung, and the player should be paid for every one of them.
+    private func awardXP(_ amount: Int) {
+        guard amount > 0 else { return }
+        let before = progress.level
+        totalXP += amount
+        progress = .from(totalXP: totalXP)
+        guard progress.level > before else { return }
+
+        var credited = 0
+        var spins = 0
+        for level in (before + 1) ... progress.level {
+            credited += XPCurve.levelReward(for: level)
+            spins += XPCurve.bonusSpinReward(for: level)
+        }
+        credits += credited
+        displayCredits = credits
+        if spins > 0 {
+            machine.awardBonusSpins(spins)
+            bonusSpins = machine.bonusSpinsRemaining
+        }
+
+        // Surface a cabinet that just became available, if any.
+        let unlocked = ReelMode.allCases.first {
+            $0.unlockLevel > before && $0.unlockLevel <= progress.level
+        }
+
+        levelUp = LevelUp(level: progress.level, title: progress.title,
+                          credits: credited, bonusSpins: spins, unlocked: unlocked)
+        AudioEngine.shared.play(.freeSpins, volume: 0.8)
+    }
+
+    func dismissLevelUp() { levelUp = nil }
+
+    // MARK: Timed credits
+
+    var freeCreditsReady: Bool { FreeCredits.isReady(since: lastCollected) }
+    var freeCreditsAmount: Int { FreeCredits.amount(forLevel: progress.level) }
+    var freeCreditsCountdown: String {
+        FreeCredits.countdown(FreeCredits.secondsRemaining(since: lastCollected))
+    }
+
+    /// Take the timed collect. No-op if it isn't ready yet.
+    @discardableResult
+    func collectFreeCredits() -> Int {
+        guard freeCreditsReady else { return 0 }
+        let amount = freeCreditsAmount
+        credits += amount
+        displayCredits = credits
+        lastCollected = Date()
+        message = "+\(amount.formatted()) CREDITS COLLECTED"
+        AudioEngine.shared.play(.coinChing, volume: 0.8)
+        save()
+        return amount
     }
 
     /// Reel `index` just landed — used for the per-reel knock and the scatter chime.
@@ -349,5 +437,7 @@ final class GameViewModel: ObservableObject {
         d.set(freeSpinsRemaining, forKey: Key.freeSpins)
         d.set(mode.rawValue, forKey: Key.mode)
         d.set(bonusSpins, forKey: Key.bonusSpins)
+        d.set(totalXP, forKey: Key.totalXP)
+        if let lastCollected { d.set(lastCollected, forKey: Key.lastCollected) }
     }
 }

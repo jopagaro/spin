@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0B7B7A603995B40A1E546E24 /* RoyalSpinApp.swift in Build */ = {isa = PBXBuildFile; fileRef = 4448CA460B3161A070094B84 /* RoyalSpinApp.swift */; };
+		497BB86EB13315C77C6A7499 /* Progression.swift in Build */ = {isa = PBXBuildFile; fileRef = 4AB6CC48C6C40750B84A8873 /* Progression.swift */; };
 		E310FE9423770CCD4D7E4F9A /* SlotMath.swift in Build */ = {isa = PBXBuildFile; fileRef = 64B2BBC3FF400EB555DB85B1 /* SlotMath.swift */; };
 		CB3D4212B6A225B837435F9F /* AudioEngine.swift in Build */ = {isa = PBXBuildFile; fileRef = 32A174C593169D010D3D621F /* AudioEngine.swift */; };
 		7C5BEF8FB40B6151389D7EA4 /* GameViewModel.swift in Build */ = {isa = PBXBuildFile; fileRef = 4EBFB4BC306538A88991FCAF /* GameViewModel.swift */; };
@@ -35,6 +36,7 @@
 
 /* Begin PBXFileReference section */
 		4448CA460B3161A070094B84 /* RoyalSpinApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoyalSpinApp.swift; sourceTree = "<group>"; };
+		4AB6CC48C6C40750B84A8873 /* Progression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Progression.swift; sourceTree = "<group>"; };
 		64B2BBC3FF400EB555DB85B1 /* SlotMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotMath.swift; sourceTree = "<group>"; };
 		32A174C593169D010D3D621F /* AudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngine.swift; sourceTree = "<group>"; };
 		4EBFB4BC306538A88991FCAF /* GameViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewModel.swift; sourceTree = "<group>"; };
@@ -116,6 +118,7 @@
 		635D92559AB6983C86D411AA /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				4AB6CC48C6C40750B84A8873 /* Progression.swift */,
 				64B2BBC3FF400EB555DB85B1 /* SlotMath.swift */,
 			);
 			path = Core;
@@ -234,6 +237,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B7B7A603995B40A1E546E24 /* RoyalSpinApp.swift */,
+				497BB86EB13315C77C6A7499 /* Progression.swift */,
 				E310FE9423770CCD4D7E4F9A /* SlotMath.swift */,
 				CB3D4212B6A225B837435F9F /* AudioEngine.swift */,
 				7C5BEF8FB40B6151389D7EA4 /* GameViewModel.swift */,

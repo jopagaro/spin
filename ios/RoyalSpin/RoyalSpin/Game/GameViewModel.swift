@@ -45,13 +45,6 @@ final class GameViewModel: ObservableObject {
 
     @Published var volatility: Volatility { didSet { machine.volatility = volatility; save() } }
     @Published var isMuted = false { didSet { AudioEngine.shared.isMuted = isMuted; save() } }
-    @Published var teaseEnabled = true {
-        didSet {
-            machine.nearMiss = teaseEnabled ? .default : .off
-            save()
-        }
-    }
-
     /// Set briefly when a near miss lands, so the UI can call it out.
     @Published private(set) var nearMissBanner: NearMiss?
 
@@ -106,7 +99,6 @@ final class GameViewModel: ObservableObject {
         static let spinCount = "rs.spinCount"
         static let volatility = "rs.volatility"
         static let muted = "rs.muted"
-        static let tease = "rs.tease"
         static let freeSpins = "rs.freeSpins"
         static let totalXP = "rs.totalXP"
         static let lastCollected = "rs.lastCollected"
@@ -129,16 +121,13 @@ final class GameViewModel: ObservableObject {
         }
 
         let vol = Volatility(rawValue: d.string(forKey: Key.volatility) ?? "") ?? .brutal
-        let tease = d.object(forKey: Key.tease) as? Bool ?? true
-
         let savedMode = ReelMode(rawValue: d.string(forKey: Key.mode) ?? "") ?? .three
         self.machine = SlotMachine(seed: seed,
                                    mode: savedMode,
                                    volatility: vol,
-                                   nearMiss: tease ? .default : .off)
+                                   nearMiss: .default)
         self.mode = savedMode
         self.volatility = vol
-        self.teaseEnabled = tease
 
         let saved = d.object(forKey: Key.credits) as? Int
         self.credits = saved ?? Self.startingCredits
@@ -180,7 +169,12 @@ final class GameViewModel: ObservableObject {
     /// Safe mid-session: the mode changes which paylines and paytable score a result,
     /// and how many reels are drawn, but never the reel strips or the RNG stream — so
     /// symbol weightings stay identical and no sequence is replayed.
-    func selectMachine(mode newMode: ReelMode, volatility newVolatility: Volatility) {
+    @discardableResult
+    func selectMachine(mode newMode: ReelMode, volatility newVolatility: Volatility) -> Bool {
+        guard newMode.isUnlocked(atLevel: progress.level) else {
+            message = "REACH LEVEL \(newMode.unlockLevel) TO UNLOCK \(newMode.displayName.uppercased())"
+            return false
+        }
         machine.mode = newMode
         machine.volatility = newVolatility
         mode = newMode
@@ -193,6 +187,7 @@ final class GameViewModel: ObservableObject {
         message = nil
         nearMissBanner = nil
         save()
+        return true
     }
 
     // MARK: Betting
@@ -433,7 +428,6 @@ final class GameViewModel: ObservableObject {
         d.set(NSNumber(value: machine.spinCount), forKey: Key.spinCount)
         d.set(volatility.rawValue, forKey: Key.volatility)
         d.set(isMuted, forKey: Key.muted)
-        d.set(teaseEnabled, forKey: Key.tease)
         d.set(freeSpinsRemaining, forKey: Key.freeSpins)
         d.set(mode.rawValue, forKey: Key.mode)
         d.set(bonusSpins, forKey: Key.bonusSpins)

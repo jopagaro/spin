@@ -2,9 +2,7 @@
 //  Sheets.swift
 //  RoyalSpin
 //
-//  Settings and paytable. The settings sheet deliberately exposes the volatility
-//  and near-miss switches rather than hiding them — this is a toy, and letting the
-//  player see the machine's guts is more interesting than pretending it's a sealed box.
+//  Settings and paytable.
 //
 
 import SwiftUI
@@ -33,17 +31,6 @@ struct SettingsSheet: View {
                          + "matches your mood in the lobby. Return-to-player and hit "
                          + "frequency are measured over millions of simulated spins; "
                          + "full pays are in the paytable.")
-                }
-
-                Section {
-                    Toggle("Near misses", isOn: $game.teaseEnabled)
-                } header: {
-                    Text("Presentation")
-                } footer: {
-                    Text("Dresses up results so a symbol lands one row off the payline. "
-                         + "This cannot change what you win: a nudged spin is only used "
-                         + "if it pays exactly what the original did. Verified to zero "
-                         + "difference in RTP by the test suite.")
                 }
 
                 Section {

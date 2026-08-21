@@ -73,8 +73,7 @@ extension ReelMode {
 
 struct LobbyView: View {
 
-    let credits: Int
-    let bonusSpins: Int
+    @ObservedObject var game: GameViewModel
     let onPick: (ReelMode, Volatility) -> Void
     let onBuy: () -> Void
     var onBack: (() -> Void)? = nil
@@ -91,7 +90,8 @@ struct LobbyView: View {
                         MachineCard(
                             mode: mode,
                             stats: MachineStats.of(mode, mode.defaultVolatility),
-                            affordable: credits >= mode.lineCount || bonusSpins > 0
+                            affordable: game.displayCredits >= mode.lineCount || game.bonusSpins > 0,
+                            unlocked: mode.isUnlocked(atLevel: game.progress.level)
                         ) {
                             onPick(mode, mode.defaultVolatility)
                         }
@@ -139,14 +139,14 @@ struct LobbyView: View {
                         .font(.system(size: 9, weight: .black, design: .rounded))
                         .foregroundStyle(.white.opacity(0.45))
                         .tracking(2)
-                    Text(credits.formatted())
+                    Text(game.displayCredits.formatted())
                         .font(.system(size: 28, weight: .black, design: .serif))
                         .foregroundStyle(LobbyStyle.gold)
                         .monospacedDigit()
                 }
 
-                if bonusSpins > 0 {
-                    Text("\(bonusSpins) BONUS")
+                if game.bonusSpins > 0 {
+                    Text("\(game.bonusSpins) BONUS")
                         .font(.system(size: 10, weight: .black, design: .rounded))
                         .foregroundStyle(.black)
                         .padding(.horizontal, 9).padding(.vertical, 5)
@@ -166,6 +166,18 @@ struct LobbyView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            HStack(spacing: 12) {
+                RankBar(progress: game.progress)
+                Spacer(minLength: 4)
+                TimelineView(.periodic(from: .now, by: 1)) { _ in
+                    CollectButton(ready: game.freeCreditsReady,
+                                  amount: game.freeCreditsAmount,
+                                  countdown: game.freeCreditsCountdown,
+                                  action: { game.collectFreeCredits() })
+                }
+            }
+            .padding(.horizontal, 4)
         }
     }
 
@@ -185,7 +197,10 @@ private struct MachineCard: View {
     let mode: ReelMode
     let stats: MachineStats
     let affordable: Bool
+    let unlocked: Bool
     let action: () -> Void
+
+    private var canPlay: Bool { affordable && unlocked }
 
     var body: some View {
         Button(action: action) {
@@ -218,11 +233,11 @@ private struct MachineCard: View {
                         .padding(.horizontal, 9).padding(.vertical, 5)
                         .background(Capsule().fill(.white.opacity(0.10)))
                     Spacer()
-                    Text(affordable ? "PLAY" : "NEEDS CREDITS")
+                    Text(!unlocked ? "UNLOCKS LV \(mode.unlockLevel)" : affordable ? "PLAY" : "NEEDS CREDITS")
                         .font(.system(size: 13, weight: .black, design: .rounded))
-                        .foregroundStyle(affordable ? Color(red: 0.24, green: 0.10, blue: 0) : .white.opacity(0.5))
+                        .foregroundStyle(canPlay ? Color(red: 0.24, green: 0.10, blue: 0) : .white.opacity(0.5))
                         .padding(.horizontal, 20).padding(.vertical, 10)
-                        .background(Capsule().fill(affordable
+                        .background(Capsule().fill(canPlay
                                                    ? AnyShapeStyle(LobbyStyle.gold)
                                                    : AnyShapeStyle(Color.white.opacity(0.12))))
                 }
@@ -239,8 +254,19 @@ private struct MachineCard: View {
                     .strokeBorder(LobbyStyle.gold.opacity(0.55), lineWidth: 1.5)
             )
             .shadow(color: .black.opacity(0.6), radius: 12, y: 6)
+            .overlay {
+                if !unlocked {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 34, weight: .black))
+                        .foregroundStyle(LobbyStyle.gold)
+                        .padding(18)
+                        .background(Circle().fill(.black.opacity(0.72)))
+                }
+            }
+            .opacity(unlocked ? 1 : 0.72)
         }
         .buttonStyle(.plain)
+        .disabled(!canPlay)
     }
 
     /// A miniature of the actual grid, so the shape of the machine is obvious before

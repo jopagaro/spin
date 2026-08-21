@@ -191,11 +191,11 @@ struct ContentView: View {
 
             case .lobby:
                 LobbyView(
-                    credits: game.displayCredits,
-                    bonusSpins: game.bonusSpins,
+                    game: game,
                     onPick: { mode, volatility in
-                        game.selectMachine(mode: mode, volatility: volatility)
-                        screen = .machine
+                        if game.selectMachine(mode: mode, volatility: volatility) {
+                            screen = .machine
+                        }
                     },
                     onBuy: { showStore = true },
                     onBack: { screen = .welcome }
@@ -237,6 +237,11 @@ struct MachineView: View {
             .ignoresSafeArea(edges: .bottom)
 
             overlays
+
+            if let levelUp = game.levelUp {
+                LevelUpBanner(event: levelUp, onDismiss: game.dismissLevelUp)
+                    .zIndex(10)
+            }
         }
         .preferredColorScheme(.dark)
         .onAppear { wireScene() }
@@ -275,9 +280,10 @@ struct MachineView: View {
 
     // MARK: Top bar
 
-    /// Credits and the store. Everything else lives on the cabinet itself.
+    /// Credits, progression and utility actions above the cabinet.
     private var topBar: some View {
-        HStack(spacing: 8) {
+        VStack(spacing: 5) {
+            HStack(spacing: 8) {
             Button(action: onExit) {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 15, weight: .bold))
@@ -326,6 +332,19 @@ struct MachineView: View {
 
             chromeButton("rectangle.grid.3x2.fill") { showPaytable = true }
             chromeButton("gearshape.fill") { showSettings = true }
+            }
+
+            HStack(spacing: 10) {
+                RankBar(progress: game.progress, compact: true)
+                    .frame(maxWidth: .infinity)
+
+                TimelineView(.periodic(from: .now, by: 1)) { _ in
+                    CollectButton(ready: game.freeCreditsReady,
+                                  amount: game.freeCreditsAmount,
+                                  countdown: game.freeCreditsCountdown,
+                                  action: { game.collectFreeCredits() })
+                }
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 2)

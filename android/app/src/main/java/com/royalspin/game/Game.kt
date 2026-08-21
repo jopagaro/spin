@@ -139,8 +139,6 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
 
     var volatility by mutableStateOf(Volatility.BRUTAL)
         private set
-    var teaseEnabled by mutableStateOf(true)
-        private set
     var muted by mutableStateOf(false)
         private set
 
@@ -165,14 +163,13 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         volatility = runCatching {
             Volatility.valueOf(prefs.getString("volatility", null) ?: "BRUTAL")
         }.getOrDefault(Volatility.BRUTAL)
-        teaseEnabled = prefs.getBoolean("tease", true)
         muted = prefs.getBoolean("muted", false)
         sound.muted = muted
 
         machine = SlotMachine(
             seed = seed,
             volatility = volatility,
-            nearMiss = if (teaseEnabled) NearMissConfig.DEFAULT else NearMissConfig.OFF,
+            nearMiss = NearMissConfig.DEFAULT,
         )
         machine.advanceTo(prefs.getLong("spinCount", 0L))
 
@@ -322,12 +319,6 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         volatility = v; machine.volatility = v; save()
     }
 
-    fun setTease(on: Boolean) {
-        teaseEnabled = on
-        machine.nearMiss = if (on) NearMissConfig.DEFAULT else NearMissConfig.OFF
-        save()
-    }
-
     fun setMuted(on: Boolean) { muted = on; sound.muted = on; save() }
 
     fun resetCredits() {
@@ -346,7 +337,6 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
             .putInt("freeSpins", freeSpinsRemaining)
             .putLong("spinCount", machine.spinCount)
             .putString("volatility", volatility.name)
-            .putBoolean("tease", teaseEnabled)
             .putBoolean("muted", muted)
             .apply()
     }

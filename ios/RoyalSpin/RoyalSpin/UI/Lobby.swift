@@ -76,6 +76,7 @@ struct LobbyView: View {
     @ObservedObject var game: GameViewModel
     let onPick: (ReelMode, Volatility) -> Void
     let onBuy: () -> Void
+    let onRealm: () -> Void
     var onBack: (() -> Void)? = nil
 
     var body: some View {
@@ -154,6 +155,22 @@ struct LobbyView: View {
                 }
 
                 Spacer()
+
+                Button(action: onRealm) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "building.columns.fill")
+                            .font(.system(size: 10, weight: .black))
+                        Text("REALM")
+                            .font(.system(size: 11, weight: .black, design: .rounded))
+                        if game.nextRealmUpgrade != nil {
+                            Circle().fill(Color.red).frame(width: 6, height: 6)
+                        }
+                    }
+                    .foregroundStyle(.white.opacity(0.9))
+                    .padding(.horizontal, 11).padding(.vertical, 9)
+                    .background(Capsule().fill(.white.opacity(0.11)))
+                }
+                .buttonStyle(.plain)
 
                 Button(action: onBuy) {
                     HStack(spacing: 4) {

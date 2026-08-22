@@ -33,6 +33,8 @@ final class GameViewModel: ObservableObject {
     @Published private(set) var levelUp: LevelUp?
     /// When the timed collect was last taken. Nil means it has never been taken.
     @Published private(set) var lastCollected: Date?
+    /// Permanent visual construction progress in My Realm.
+    @Published private(set) var realmState: RealmState = .init()
 
     /// A rank promotion, with what it paid.
     struct LevelUp: Equatable {
@@ -41,6 +43,7 @@ final class GameViewModel: ObservableObject {
         let credits: Int
         let bonusSpins: Int
         let unlocked: ReelMode?
+        let realmUpgrades: [RealmUpgrade]
     }
 
     @Published var volatility: Volatility { didSet { machine.volatility = volatility; save() } }
@@ -102,6 +105,7 @@ final class GameViewModel: ObservableObject {
         static let freeSpins = "rs.freeSpins"
         static let totalXP = "rs.totalXP"
         static let lastCollected = "rs.lastCollected"
+        static let realm = "rs.realm.v1"
     }
 
     init() {
@@ -158,6 +162,10 @@ final class GameViewModel: ObservableObject {
         self.totalXP = d.object(forKey: Key.totalXP) as? Int ?? 0
         self.progress = .from(totalXP: totalXP)
         self.lastCollected = d.object(forKey: Key.lastCollected) as? Date
+        if let data = d.data(forKey: Key.realm),
+           let decoded = try? JSONDecoder().decode(RealmState.self, from: data) {
+            self.realmState = decoded
+        }
 
         AudioEngine.shared.isMuted = isMuted
     }
@@ -324,13 +332,55 @@ final class GameViewModel: ObservableObject {
         let unlocked = ReelMode.allCases.first {
             $0.unlockLevel > before && $0.unlockLevel <= progress.level
         }
+        let realmUpgrades = RealmUpgrade.all.filter {
+            $0.level > before && $0.level <= progress.level
+        }
 
         levelUp = LevelUp(level: progress.level, title: progress.title,
-                          credits: credited, bonusSpins: spins, unlocked: unlocked)
+                          credits: credited, bonusSpins: spins, unlocked: unlocked,
+                          realmUpgrades: realmUpgrades)
         AudioEngine.shared.play(.freeSpins, volume: 0.8)
     }
 
     func dismissLevelUp() { levelUp = nil }
+
+    // MARK: My Realm
+
+    var nextRealmUpgrade: RealmUpgrade? {
+        RealmUpgrade.all.first { !realmState.isCompleted($0.level) }
+    }
+
+    var completedRealmCount: Int { realmState.completedLevels.count }
+
+    enum RealmPurchaseResult: Equatable {
+        case built(RealmUpgrade)
+        case locked(requiredLevel: Int)
+        case prerequisite(requiredLevel: Int)
+        case insufficientCredits(missing: Int)
+        case alreadyBuilt
+    }
+
+    /// Purchases are sequential so the world always grows naturally, even if a
+    /// jackpot unlocked several ranks at once. Rank can never be bought or skipped.
+    @discardableResult
+    func purchaseRealmUpgrade(_ upgrade: RealmUpgrade) -> RealmPurchaseResult {
+        guard !realmState.isCompleted(upgrade.level) else { return .alreadyBuilt }
+        guard progress.level >= upgrade.level else { return .locked(requiredLevel: upgrade.level) }
+        if upgrade.level > 1, !realmState.isCompleted(upgrade.level - 1) {
+            return .prerequisite(requiredLevel: upgrade.level - 1)
+        }
+        guard credits >= upgrade.cost else {
+            return .insufficientCredits(missing: upgrade.cost - credits)
+        }
+
+        credits -= upgrade.cost
+        displayCredits = credits
+        realmState.completedLevels.insert(upgrade.level)
+        message = "(upgrade.name.uppercased()) BUILT"
+        AudioEngine.shared.play(.coinChing, volume: 0.9)
+        save()
+        return .built(upgrade)
+    }
 
     // MARK: Timed credits
 
@@ -431,6 +481,9 @@ final class GameViewModel: ObservableObject {
         d.set(mode.rawValue, forKey: Key.mode)
         d.set(bonusSpins, forKey: Key.bonusSpins)
         d.set(totalXP, forKey: Key.totalXP)
+        if let realm = try? JSONEncoder().encode(realmState) {
+            d.set(realm, forKey: Key.realm)
+        }
         if let lastCollected { d.set(lastCollected, forKey: Key.lastCollected) }
     }
 }

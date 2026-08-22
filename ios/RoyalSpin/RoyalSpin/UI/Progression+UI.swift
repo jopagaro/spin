@@ -123,6 +123,7 @@ struct RankBar: View {
 struct LevelUpBanner: View {
     let event: GameViewModel.LevelUp
     let onDismiss: () -> Void
+    var onRealm: (() -> Void)? = nil
 
     @State private var shown = false
 
@@ -162,8 +163,31 @@ struct LevelUpBanner: View {
                     if let unlocked = event.unlocked {
                         reward("\(unlocked.displayName) unlocked")
                     }
+                    if event.realmUpgrades.count == 1, let upgrade = event.realmUpgrades.first {
+                        reward("Realm: \(upgrade.name) unlocked")
+                    } else if event.realmUpgrades.count > 1 {
+                        reward("\(event.realmUpgrades.count) Realm upgrades unlocked")
+                    }
                 }
                 .padding(.top, 2)
+
+                if !event.realmUpgrades.isEmpty, let onRealm {
+                    Button {
+                        onDismiss()
+                        onRealm()
+                    } label: {
+                        Text(event.realmUpgrades.count == 1
+                             ? "VIEW REALM UPGRADE"
+                             : "VIEW \(event.realmUpgrades.count) REALM UPGRADES")
+                            .font(.system(size: 12, weight: .black, design: .rounded))
+                            .foregroundStyle(Color(red: 0.24, green: 0.10, blue: 0))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 11)
+                            .background(Capsule().fill(Rank.band(for: event.level).tint))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 2)
+                }
 
                 Text("TAP TO CONTINUE")
                     .font(.system(size: 10, weight: .bold, design: .rounded))

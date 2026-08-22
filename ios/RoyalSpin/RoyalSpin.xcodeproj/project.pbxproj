@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0B7B7A603995B40A1E546E24 /* RoyalSpinApp.swift in Build */ = {isa = PBXBuildFile; fileRef = 4448CA460B3161A070094B84 /* RoyalSpinApp.swift */; };
 		497BB86EB13315C77C6A7499 /* Progression.swift in Build */ = {isa = PBXBuildFile; fileRef = 4AB6CC48C6C40750B84A8873 /* Progression.swift */; };
+		80FE2096503CDEE49DA7A3BB /* Realm.swift in Build */ = {isa = PBXBuildFile; fileRef = EB183428D241A8A7838B5254 /* Realm.swift */; };
 		E310FE9423770CCD4D7E4F9A /* SlotMath.swift in Build */ = {isa = PBXBuildFile; fileRef = 64B2BBC3FF400EB555DB85B1 /* SlotMath.swift */; };
 		CB3D4212B6A225B837435F9F /* AudioEngine.swift in Build */ = {isa = PBXBuildFile; fileRef = 32A174C593169D010D3D621F /* AudioEngine.swift */; };
 		7C5BEF8FB40B6151389D7EA4 /* GameViewModel.swift in Build */ = {isa = PBXBuildFile; fileRef = 4EBFB4BC306538A88991FCAF /* GameViewModel.swift */; };
@@ -17,6 +18,7 @@
 		0C2C2246121BBD6AC493B8C3 /* ContentView.swift in Build */ = {isa = PBXBuildFile; fileRef = 62F6692BA4CEF25BC84BD70E /* ContentView.swift */; };
 		A253C0E86EC927BF90431851 /* Lobby.swift in Build */ = {isa = PBXBuildFile; fileRef = 79E628B98E4E5812B62AC335 /* Lobby.swift */; };
 		C21A73EBA14B0EF3D77DA64E /* Progression+UI.swift in Build */ = {isa = PBXBuildFile; fileRef = F6A11FA45EA9D0E88C8FD651 /* Progression+UI.swift */; };
+		117262785B4A6E44372E9661 /* RealmView.swift in Build */ = {isa = PBXBuildFile; fileRef = 173382DD9AE7724AD7541935 /* RealmView.swift */; };
 		45D8FD00A7397CECB6AE6FB5 /* Sheets.swift in Build */ = {isa = PBXBuildFile; fileRef = 132FE2790FE26F6619A23874 /* Sheets.swift */; };
 		4497786B18F0F1C8BD8E462B /* Welcome.swift in Build */ = {isa = PBXBuildFile; fileRef = 6F2E0571D401C8ACEED28732 /* Welcome.swift */; };
 		3ED0748C9F5D073F6CD36001 /* bust.wav in Build */ = {isa = PBXBuildFile; fileRef = F9329BEDA7DE07BA7DB67697 /* bust.wav */; };
@@ -38,6 +40,7 @@
 /* Begin PBXFileReference section */
 		4448CA460B3161A070094B84 /* RoyalSpinApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RoyalSpinApp.swift"; sourceTree = "<group>"; };
 		4AB6CC48C6C40750B84A8873 /* Progression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Progression.swift"; sourceTree = "<group>"; };
+		EB183428D241A8A7838B5254 /* Realm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Realm.swift"; sourceTree = "<group>"; };
 		64B2BBC3FF400EB555DB85B1 /* SlotMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SlotMath.swift"; sourceTree = "<group>"; };
 		32A174C593169D010D3D621F /* AudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AudioEngine.swift"; sourceTree = "<group>"; };
 		4EBFB4BC306538A88991FCAF /* GameViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameViewModel.swift"; sourceTree = "<group>"; };
@@ -46,6 +49,7 @@
 		62F6692BA4CEF25BC84BD70E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView.swift"; sourceTree = "<group>"; };
 		79E628B98E4E5812B62AC335 /* Lobby.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Lobby.swift"; sourceTree = "<group>"; };
 		F6A11FA45EA9D0E88C8FD651 /* Progression+UI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Progression+UI.swift"; sourceTree = "<group>"; };
+		173382DD9AE7724AD7541935 /* RealmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RealmView.swift"; sourceTree = "<group>"; };
 		132FE2790FE26F6619A23874 /* Sheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sheets.swift"; sourceTree = "<group>"; };
 		6F2E0571D401C8ACEED28732 /* Welcome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Welcome.swift"; sourceTree = "<group>"; };
 		F9329BEDA7DE07BA7DB67697 /* bust.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "bust.wav"; sourceTree = "<group>"; };
@@ -121,6 +125,7 @@
 			isa = PBXGroup;
 			children = (
 				4AB6CC48C6C40750B84A8873 /* Progression.swift */,
+				EB183428D241A8A7838B5254 /* Realm.swift */,
 				64B2BBC3FF400EB555DB85B1 /* SlotMath.swift */,
 			);
 			path = "Core";
@@ -143,6 +148,7 @@
 				62F6692BA4CEF25BC84BD70E /* ContentView.swift */,
 				79E628B98E4E5812B62AC335 /* Lobby.swift */,
 				F6A11FA45EA9D0E88C8FD651 /* Progression+UI.swift */,
+				173382DD9AE7724AD7541935 /* RealmView.swift */,
 				132FE2790FE26F6619A23874 /* Sheets.swift */,
 				6F2E0571D401C8ACEED28732 /* Welcome.swift */,
 			);
@@ -241,6 +247,7 @@
 			files = (
 				0B7B7A603995B40A1E546E24 /* RoyalSpinApp.swift */,
 				497BB86EB13315C77C6A7499 /* Progression.swift */,
+				80FE2096503CDEE49DA7A3BB /* Realm.swift */,
 				E310FE9423770CCD4D7E4F9A /* SlotMath.swift */,
 				CB3D4212B6A225B837435F9F /* AudioEngine.swift */,
 				7C5BEF8FB40B6151389D7EA4 /* GameViewModel.swift */,
@@ -249,6 +256,7 @@
 				0C2C2246121BBD6AC493B8C3 /* ContentView.swift */,
 				A253C0E86EC927BF90431851 /* Lobby.swift */,
 				C21A73EBA14B0EF3D77DA64E /* Progression+UI.swift */,
+				117262785B4A6E44372E9661 /* RealmView.swift */,
 				45D8FD00A7397CECB6AE6FB5 /* Sheets.swift */,
 				4497786B18F0F1C8BD8E462B /* Welcome.swift */,
 			);

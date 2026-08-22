@@ -173,7 +173,7 @@ struct ContentView: View {
     @State private var screen: Screen = .welcome
     @State private var showStore = false
 
-    private enum Screen { case welcome, lobby, machine }
+    private enum Screen { case welcome, lobby, machine, realm }
 
     var body: some View {
         Group {
@@ -198,11 +198,19 @@ struct ContentView: View {
                         }
                     },
                     onBuy: { showStore = true },
+                    onRealm: { screen = .realm },
                     onBack: { screen = .welcome }
                 )
 
             case .machine:
-                MachineView(game: game) { screen = .lobby }
+                MachineView(game: game,
+                            onExit: { screen = .lobby },
+                            onRealm: { screen = .realm })
+
+            case .realm:
+                RealmView(game: game,
+                          onBack: { screen = .lobby },
+                          onSpin: { screen = .machine })
             }
         }
         .animation(.easeInOut(duration: 0.25), value: screen)
@@ -216,6 +224,7 @@ struct MachineView: View {
 
     @ObservedObject var game: GameViewModel
     var onExit: () -> Void
+    var onRealm: () -> Void
 
     @State private var scene = ReelScene()
     @State private var showSettings = false
@@ -239,7 +248,9 @@ struct MachineView: View {
             overlays
 
             if let levelUp = game.levelUp {
-                LevelUpBanner(event: levelUp, onDismiss: game.dismissLevelUp)
+                LevelUpBanner(event: levelUp,
+                              onDismiss: game.dismissLevelUp,
+                              onRealm: onRealm)
                     .zIndex(10)
             }
         }
@@ -331,6 +342,7 @@ struct MachineView: View {
             }
 
             chromeButton("rectangle.grid.3x2.fill") { showPaytable = true }
+            chromeButton("building.columns.fill") { onRealm() }
             chromeButton("gearshape.fill") { showSettings = true }
             }
 

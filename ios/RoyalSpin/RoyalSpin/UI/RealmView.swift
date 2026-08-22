@@ -29,8 +29,10 @@ struct RealmView: View {
             VStack(spacing: 8) {
                 header
                 realmCanvas
-                    .frame(maxHeight: .infinity)
+                    .aspectRatio(1, contentMode: .fit)
+                    .frame(maxWidth: .infinity)
                 upgradeCard
+                Spacer(minLength: 0)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -58,10 +60,14 @@ struct RealmView: View {
                     Text("MY REALM")
                         .font(.system(size: 25, weight: .black, design: .serif))
                         .foregroundStyle(LobbyStyle.gold)
-                    Text("PEASANTRY · \(game.completedRealmCount)/10 BUILT")
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Text("\(game.progress.band.displayName.uppercased()) · \(game.completedRealmCount)/\(RealmUpgrade.all.count) BUILT")
                         .font(.system(size: 9, weight: .black, design: .rounded))
                         .tracking(1.2)
                         .foregroundStyle(.white.opacity(0.48))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
 
                 Spacer()
@@ -71,6 +77,10 @@ struct RealmView: View {
                         .font(.system(size: 24, weight: .black, design: .serif))
                         .foregroundStyle(LobbyStyle.gold)
                         .monospacedDigit()
+                        .contentTransition(.numericText())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.55)
+                        .frame(maxWidth: 105, alignment: .trailing)
                     Text("CREDITS")
                         .font(.system(size: 8, weight: .black, design: .rounded))
                         .tracking(1.4)
@@ -80,7 +90,7 @@ struct RealmView: View {
 
             HStack(spacing: 10) {
                 RankBar(progress: game.progress, compact: true)
-                ProgressView(value: Double(game.completedRealmCount), total: 10)
+                ProgressView(value: Double(game.completedRealmCount), total: Double(RealmUpgrade.all.count))
                     .tint(Color(red: 0.95, green: 0.76, blue: 0.28))
                     .frame(maxWidth: 100)
             }
@@ -161,7 +171,9 @@ struct RealmView: View {
     private var visibleCompleted: [RealmUpgrade] {
         RealmUpgrade.all.filter { upgrade in
             guard game.realmState.isCompleted(upgrade.level) else { return false }
-            if upgrade.level == 1, game.realmState.isCompleted(10) { return false }
+            if RealmUpgrade.all.contains(where: {
+                $0.replacesLevel == upgrade.level && game.realmState.isCompleted($0.level)
+            }) { return false }
             return true
         }
     }
@@ -187,11 +199,16 @@ struct RealmView: View {
                         Text(upgrade.name)
                             .font(.system(size: 21, weight: .black, design: .serif))
                             .foregroundStyle(LobbyStyle.gold)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.72)
                     }
                     Spacer()
                     Text(upgrade.cost == 0 ? "FREE" : "\(upgrade.cost.formatted())")
                         .font(.system(size: 17, weight: .black, design: .rounded))
                         .foregroundStyle(.white)
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
 
                 Text(upgrade.detail)
@@ -209,6 +226,8 @@ struct RealmView: View {
                     Button { build(upgrade) } label: {
                         Text(actionLabel(for: upgrade))
                             .frame(maxWidth: .infinity)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.65)
                     }
                     .buttonStyle(RealmPrimaryButtonStyle())
                     .disabled(!canBuild(upgrade))

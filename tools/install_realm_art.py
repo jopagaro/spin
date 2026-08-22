@@ -10,26 +10,36 @@ from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "assets" / "realm" / "masters" / "peasantry"
+PEASANTRY = ROOT / "assets" / "realm" / "masters" / "peasantry"
+HOUSEHOLD = ROOT / "assets" / "realm" / "masters" / "household"
 CATALOG = ROOT / "ios" / "RoyalSpin" / "RoyalSpin" / "Assets.xcassets"
 
 ASSETS = {
-    "realm_base_mud": ("realm_base_mud.png", 1400),
-    "realm_01_peasant_hut": ("realm_01_peasant_hut.png", 700),
-    "realm_02_grunt_camp": ("realm_02_grunt_camp.png", 700),
-    "realm_03_serf_garden": ("realm_03_serf_garden.png", 700),
-    "realm_04_mud_farmer_furrows": ("realm_04_mud_farmer_furrows.png", 700),
-    "realm_05_pot_scrubber_wash": ("realm_05_pot_scrubber_wash.png", 700),
-    "realm_06_stable_hand_stable": ("realm_06_stable_hand_stable.png", 700),
-    "realm_07_goose_herd_pond": ("realm_07_goose_herd_pond.png", 700),
-    "realm_08_rookie_training": ("realm_08_rookie_training.png", 700),
-    "realm_09_turnip_knight_guard": ("realm_09_turnip_knight_guard.png", 700),
-    "realm_10_apprentice_cottage": ("realm_10_apprentice_cottage.png", 700),
+    "realm_base_mud": (PEASANTRY / "realm_base_mud.png", 1400),
+    "realm_01_peasant_hut": (PEASANTRY / "realm_01_peasant_hut.png", 700),
+    "realm_02_grunt_camp": (PEASANTRY / "realm_02_grunt_camp.png", 700),
+    "realm_03_serf_garden": (PEASANTRY / "realm_03_serf_garden.png", 700),
+    "realm_04_mud_farmer_furrows": (PEASANTRY / "realm_04_mud_farmer_furrows.png", 700),
+    "realm_05_pot_scrubber_wash": (PEASANTRY / "realm_05_pot_scrubber_wash.png", 700),
+    "realm_06_stable_hand_stable": (PEASANTRY / "realm_06_stable_hand_stable.png", 700),
+    "realm_07_goose_herd_pond": (PEASANTRY / "realm_07_goose_herd_pond.png", 700),
+    "realm_08_rookie_training": (PEASANTRY / "realm_08_rookie_training.png", 700),
+    "realm_09_turnip_knight_guard": (PEASANTRY / "realm_09_turnip_knight_guard.png", 700),
+    "realm_10_apprentice_cottage": (PEASANTRY / "realm_10_apprentice_cottage.png", 700),
+    "realm_11_courier_post": (HOUSEHOLD / "realm_11_courier_post.png", 700),
+    "realm_12_torchlit_path": (HOUSEHOLD / "realm_12_torchlit_path.png", 700),
+    "realm_13_cupbearer_fountain": (HOUSEHOLD / "realm_13_cupbearer_fountain.png", 700),
+    "realm_14_page_noticeboard": (HOUSEHOLD / "realm_14_page_noticeboard.png", 700),
+    "realm_15_footman_gate": (HOUSEHOLD / "realm_15_footman_gate.png", 700),
+    "realm_16_cookhouse": (HOUSEHOLD / "realm_16_cookhouse.png", 700),
+    "realm_17_brewery": (HOUSEHOLD / "realm_17_brewery.png", 700),
+    "realm_18_smithy": (HOUSEHOLD / "realm_18_smithy.png", 700),
+    "realm_19_falcon_mews": (HOUSEHOLD / "realm_19_falcon_mews.png", 700),
+    "realm_20_hunting_lodge": (HOUSEHOLD / "realm_20_hunting_lodge.png", 700),
 }
 
 
-def install(asset_name: str, source_name: str, max_edge: int) -> None:
-    source = SOURCE / source_name
+def install(asset_name: str, source: Path, max_edge: int) -> None:
     target_dir = CATALOG / f"{asset_name}.imageset"
     target_dir.mkdir(parents=True, exist_ok=True)
     target_image = target_dir / f"{asset_name}.png"

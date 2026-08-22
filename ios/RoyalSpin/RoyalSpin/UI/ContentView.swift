@@ -170,10 +170,27 @@ enum Cab {
 struct ContentView: View {
 
     @StateObject private var game = GameViewModel()
-    @State private var screen: Screen = .welcome
+    @State private var screen: Screen
     @State private var showStore = false
 
     private enum Screen { case welcome, lobby, machine, realm }
+
+    init() {
+#if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        let initialScreen: Screen
+        if arguments.contains("-ui-realm") {
+            initialScreen = .realm
+        } else if arguments.contains("-ui-lobby") {
+            initialScreen = .lobby
+        } else {
+            initialScreen = .welcome
+        }
+#else
+        let initialScreen: Screen = .welcome
+#endif
+        _screen = State(initialValue: initialScreen)
+    }
 
     var body: some View {
         Group {
@@ -307,29 +324,35 @@ struct MachineView: View {
             .disabled(game.isSpinning)
             .opacity(game.isSpinning ? 0.35 : 1)
 
-            VStack(alignment: .leading, spacing: -3) {
-                Text("CREDITS")
-                    .font(.system(size: 9, weight: .black, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.45))
-                    .tracking(2.0)
-                Text(game.displayCredits.formatted())
-                    .font(.system(size: 26, weight: .black, design: .serif))
-                    .foregroundStyle(goldGradient)
-                    .monospacedDigit()
-                    .contentTransition(.numericText())
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .shadow(color: .black.opacity(0.8), radius: 3, y: 2)
-            }
-
             Button { showStore = true } label: {
-                HStack(spacing: 3) {
-                    Image(systemName: "plus").font(.system(size: 10, weight: .black))
-                    Text("BUY").font(.system(size: 11, weight: .black, design: .rounded))
+                HStack(spacing: 7) {
+                    VStack(alignment: .leading, spacing: -3) {
+                        Text("CREDITS")
+                            .font(.system(size: 8, weight: .black, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.45))
+                            .tracking(1.5)
+                        Text(game.displayCredits.formatted())
+                            .font(.system(size: 23, weight: .black, design: .serif))
+                            .foregroundStyle(goldGradient)
+                            .monospacedDigit()
+                            .contentTransition(.numericText())
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                            .frame(maxWidth: 78, alignment: .leading)
+                            .shadow(color: .black.opacity(0.8), radius: 3, y: 2)
+                    }
+
+                    Image(systemName: "plus")
+                        .font(.system(size: 10, weight: .black))
+                        .foregroundStyle(Color(red: 0.24, green: 0.10, blue: 0))
+                        .frame(width: 22, height: 22)
+                        .background(Circle().fill(goldGradient))
                 }
-                .foregroundStyle(Color(red: 0.24, green: 0.10, blue: 0))
-                .padding(.horizontal, 10).padding(.vertical, 7)
-                .background(Capsule().fill(goldGradient))
+                .padding(.leading, 9)
+                .padding(.trailing, 6)
+                .padding(.vertical, 4)
+                .background(Capsule().fill(.black.opacity(0.35)))
+                .overlay(Capsule().strokeBorder(.white.opacity(0.10), lineWidth: 1))
             }
             .buttonStyle(.plain)
 

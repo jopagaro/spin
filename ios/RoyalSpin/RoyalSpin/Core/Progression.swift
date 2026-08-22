@@ -116,6 +116,16 @@ public enum Rank {
         "rank_08_rookie",
         "rank_09_turnip_knight",
         "rank_10_apprentice",
+        "rank_11_errand_runner",
+        "rank_12_torch_bearer",
+        "rank_13_cup_bearer",
+        "rank_14_page",
+        "rank_15_footman",
+        "rank_16_cook",
+        "rank_17_brewer",
+        "rank_18_blacksmith",
+        "rank_19_falconer",
+        "rank_20_huntsman",
     ]
 
     public static func illustratedAssetName(for level: Int) -> String? {

@@ -46,6 +46,9 @@ RANKS = [
     "01_peasant", "02_grunt", "03_serf", "04_mud_farmer", "05_pot_scrubber",
     "06_stable_hand", "07_goose_herd", "08_rookie", "09_turnip_knight",
     "10_apprentice",
+    "11_errand_runner", "12_torch_bearer", "13_cup_bearer", "14_page",
+    "15_footman", "16_cook", "17_brewer", "18_blacksmith", "19_falconer",
+    "20_huntsman",
 ]
 
 
@@ -183,8 +186,12 @@ def main():
     print("\n  ranks")
     rank_dir = os.path.join(ROOT, "assets", "ranks", "masters")
     for rank in RANKS:
-        src = os.path.join(rank_dir, f"{rank}.png")
-        if not os.path.exists(src):
+        candidates = [
+            os.path.join(rank_dir, f"{rank}.png"),
+            os.path.join(rank_dir, "household", f"{rank}.png"),
+        ]
+        src = next((candidate for candidate in candidates if os.path.exists(candidate)), None)
+        if src is None:
             print(f"    · {rank:<20} not present")
             continue
         name = f"rank_{rank}"

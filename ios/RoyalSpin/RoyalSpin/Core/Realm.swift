@@ -77,6 +77,49 @@ public struct RealmUpgrade: Identifiable, Equatable, Sendable {
               replacesLevel: 1),
     ]
 
-    public static var all: [RealmUpgrade] { peasantry }
+    public static let household: [RealmUpgrade] = [
+        .init(level: 11, name: "Courier Post",
+              detail: "Messages finally travel farther than shouting distance.",
+              assetName: "realm_11_courier_post", centerX: 0.44, centerY: 0.18, width: 0.16,
+              replacesLevel: nil),
+        .init(level: 12, name: "Torchlit Path",
+              detail: "Two bright torches make the muddy road feel almost respectable.",
+              assetName: "realm_12_torchlit_path", centerX: 0.49, centerY: 0.51, width: 0.22,
+              replacesLevel: nil),
+        .init(level: 13, name: "Cupbearer Fountain",
+              detail: "Clean water arrives in a fountain shaped for a royal toast.",
+              assetName: "realm_13_cupbearer_fountain", centerX: 0.49, centerY: 0.40, width: 0.16,
+              replacesLevel: nil),
+        .init(level: 14, name: "Page Noticeboard",
+              detail: "Orders, errands, and suspiciously official notices gather here.",
+              assetName: "realm_14_page_noticeboard", centerX: 0.14, centerY: 0.55, width: 0.16,
+              replacesLevel: nil),
+        .init(level: 15, name: "Footman Gate",
+              detail: "A proper gate gives the growing settlement a proper entrance.",
+              assetName: "realm_15_footman_gate", centerX: 0.50, centerY: 0.82, width: 0.25,
+              replacesLevel: nil),
+        .init(level: 16, name: "Castle Cookhouse",
+              detail: "Warm bread and copper pots turn the camp into a household.",
+              assetName: "realm_16_cookhouse", centerX: 0.14, centerY: 0.25, width: 0.23,
+              replacesLevel: nil),
+        .init(level: 17, name: "Village Brewery",
+              detail: "Barrels, hops, and a reliable reason for everyone to visit.",
+              assetName: "realm_17_brewery", centerX: 0.84, centerY: 0.39, width: 0.23,
+              replacesLevel: nil),
+        .init(level: 18, name: "Working Smithy",
+              detail: "A glowing forge equips the realm with tools worthy of its ambition.",
+              assetName: "realm_18_smithy", centerX: 0.65, centerY: 0.79, width: 0.23,
+              replacesLevel: nil),
+        .init(level: 19, name: "Falcon Mews",
+              detail: "High perches welcome the realm's sharpest-eyed residents.",
+              assetName: "realm_19_falcon_mews", centerX: 0.84, centerY: 0.18, width: 0.19,
+              replacesLevel: nil),
+        .init(level: 20, name: "Hunting Lodge",
+              detail: "The apprentice cottage becomes a handsome lodge fit for the household.",
+              assetName: "realm_20_hunting_lodge", centerX: 0.31, centerY: 0.62, width: 0.38,
+              replacesLevel: 10),
+    ]
+
+    public static var all: [RealmUpgrade] { peasantry + household }
     public static func at(level: Int) -> RealmUpgrade? { all.first { $0.level == level } }
 }

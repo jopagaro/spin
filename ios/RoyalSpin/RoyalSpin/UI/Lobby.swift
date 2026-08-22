@@ -135,16 +135,36 @@ struct LobbyView: View {
                     .buttonStyle(.plain)
                 }
 
-                VStack(alignment: .leading, spacing: -3) {
-                    Text("CREDITS")
-                        .font(.system(size: 9, weight: .black, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.45))
-                        .tracking(2)
-                    Text(game.displayCredits.formatted())
-                        .font(.system(size: 28, weight: .black, design: .serif))
-                        .foregroundStyle(LobbyStyle.gold)
-                        .monospacedDigit()
+                Button(action: onBuy) {
+                    HStack(spacing: 8) {
+                        VStack(alignment: .leading, spacing: -3) {
+                            Text("CREDITS")
+                                .font(.system(size: 8, weight: .black, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.45))
+                                .tracking(1.6)
+                            Text(game.displayCredits.formatted())
+                                .font(.system(size: 25, weight: .black, design: .serif))
+                                .foregroundStyle(LobbyStyle.gold)
+                                .monospacedDigit()
+                                .contentTransition(.numericText())
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.55)
+                                .frame(maxWidth: 86, alignment: .leading)
+                        }
+
+                        Image(systemName: "plus")
+                            .font(.system(size: 11, weight: .black))
+                            .foregroundStyle(Color(red: 0.24, green: 0.10, blue: 0))
+                            .frame(width: 24, height: 24)
+                            .background(Circle().fill(LobbyStyle.gold))
+                    }
+                    .padding(.leading, 10)
+                    .padding(.trailing, 7)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(.black.opacity(0.30)))
+                    .overlay(Capsule().strokeBorder(.white.opacity(0.10), lineWidth: 1))
                 }
+                .buttonStyle(.plain)
 
                 if game.bonusSpins > 0 {
                     Text("\(game.bonusSpins) BONUS")
@@ -152,9 +172,11 @@ struct LobbyView: View {
                         .foregroundStyle(.black)
                         .padding(.horizontal, 9).padding(.vertical, 5)
                         .background(Capsule().fill(LobbyStyle.gold))
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
                 }
 
-                Spacer()
+                Spacer(minLength: 0)
 
                 Button(action: onRealm) {
                     HStack(spacing: 4) {
@@ -162,6 +184,7 @@ struct LobbyView: View {
                             .font(.system(size: 10, weight: .black))
                         Text("REALM")
                             .font(.system(size: 11, weight: .black, design: .rounded))
+                            .lineLimit(1)
                         if game.nextRealmUpgrade != nil {
                             Circle().fill(Color.red).frame(width: 6, height: 6)
                         }
@@ -169,17 +192,7 @@ struct LobbyView: View {
                     .foregroundStyle(.white.opacity(0.9))
                     .padding(.horizontal, 11).padding(.vertical, 9)
                     .background(Capsule().fill(.white.opacity(0.11)))
-                }
-                .buttonStyle(.plain)
-
-                Button(action: onBuy) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "plus").font(.system(size: 11, weight: .black))
-                        Text("BUY").font(.system(size: 12, weight: .black, design: .rounded))
-                    }
-                    .foregroundStyle(Color(red: 0.24, green: 0.10, blue: 0))
-                    .padding(.horizontal, 14).padding(.vertical, 9)
-                    .background(Capsule().fill(LobbyStyle.gold))
+                    .fixedSize(horizontal: true, vertical: false)
                 }
                 .buttonStyle(.plain)
             }

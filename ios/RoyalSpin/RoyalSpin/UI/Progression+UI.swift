@@ -100,6 +100,8 @@ struct RankBar: View {
                             .font(.system(size: 9, weight: .bold, design: .rounded))
                             .foregroundStyle(.white.opacity(0.4))
                             .monospacedDigit()
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.65)
                     }
                 }
 

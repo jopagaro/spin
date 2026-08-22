@@ -20,7 +20,8 @@ IOS = os.path.join(ROOT, "ios", "RoyalSpin")
 SRC = os.path.join(IOS, "RoyalSpin")
 PROJ = os.path.join(IOS, "RoyalSpin.xcodeproj")
 
-BUNDLE_ID = "com.royalspin.game"
+BUNDLE_ID = "com.jopagaro.royalspin"
+DEVELOPMENT_TEAM = "AZVC5A74YD"
 DEPLOYMENT_TARGET = "17.0"
 SWIFT_VERSION = "5.0"
 
@@ -124,7 +125,7 @@ def main():
     for g, n, _ in files:
         p = path_of(g, n)
         w(f"\t\t{file_ref[p]} /* {n} */ = {{isa = PBXFileReference; "
-          f"lastKnownFileType = {filetype(n)}; path = {n}; sourceTree = \"<group>\"; }};")
+          f"lastKnownFileType = {filetype(n)}; path = \"{n}\"; sourceTree = \"<group>\"; }};")
     w(f"\t\t{ids['product']} /* RoyalSpin.app */ = {{isa = PBXFileReference; "
       f"explicitFileType = wrapper.application; includeInIndex = 0; "
       f"path = RoyalSpin.app; sourceTree = BUILT_PRODUCTS_DIR; }};")
@@ -176,7 +177,7 @@ def main():
         for n in members:
             w(f"\t\t\t\t{file_ref[path_of(g, n)]} /* {n} */,")
         w("\t\t\t);")
-        w(f"\t\t\tpath = {g};")
+        w(f"\t\t\tpath = \"{g}\";")
         w("\t\t\tsourceTree = \"<group>\";")
         w("\t\t};")
 
@@ -282,6 +283,7 @@ def main():
 \t\t\t\tASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 \t\t\t\tCODE_SIGN_STYLE = Automatic;
 \t\t\t\tCURRENT_PROJECT_VERSION = 1;
+\t\t\t\tDEVELOPMENT_TEAM = {DEVELOPMENT_TEAM};
 \t\t\t\tGENERATE_INFOPLIST_FILE = YES;
 \t\t\t\tINFOPLIST_KEY_CFBundleDisplayName = "Royal Spin";
 \t\t\t\tINFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
